@@ -1274,7 +1274,8 @@ bool StudioHost::handleHostMethod(const Json& req) {
         sendReply(reply);
         return true;
     };
-    if (method == "studio.windowDrag" || method == "studio.windowZoom") {
+    if (method == "studio.windowDrag" || method == "studio.windowZoom" ||
+        method == "studio.windowMinimize" || method == "studio.windowResize") {
         try { (void)platform_.windowRequest(method, params); } catch (const std::exception&) {}
         return true;
     }
