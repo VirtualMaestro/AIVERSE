@@ -181,7 +181,7 @@ void io(Archive&,CharacterSnapshot&);
 void ioMelee(Archive&,CharacterSnapshot&);
 
 namespace detail {
-template<class T> void copyField(T& to,const T& from){to=from;}
+template<class T> requires (!std::is_array_v<T>) void copyField(T& to,const T& from){to=from;}
 template<class T,std::size_t N> void copyField(T (&to)[N],const T (&from)[N]){std::copy(from,from+N,to);}
 }
 template<bool Const> CharacterSnapshot snapshot(const BasicCharacterRef<Const>& r) {
