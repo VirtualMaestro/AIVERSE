@@ -7,7 +7,7 @@ description: Reuse AIVERSE boss-encounters policies (telegraphed circle/cone/lin
 
 Use whenever a project needs telegraphed boss attacks, boss fights with phases, timed boss windows or crowds of
 hunting mobs, whatever the camera or game type. Projects on the data-driven simulation host don't wire it by hand: rules
-`encounters` (docs/encounters.md, `templates/boss_arena`) runs these policies on real units (bosses, mobs,
+`encounters` (docs/encounters.md, `~/.aiverse/packages/templates/boss_arena`) runs these policies on real units (bosses, mobs,
 telegraphs as unit abilities, rules statuses, schedule, Lua events, decals); the steps below are for native/host
 owners and for planning the same mechanics as data. The rules block currently runs only on the legacy
 `engine/game` host.

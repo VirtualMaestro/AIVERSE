@@ -3,6 +3,7 @@
 //   AiverseGame [--project DIR] [--listen | --connect udp://host:27200]
 // Controls: mouse look (click to capture), WASD, Space jump / swim, Shift sprint, Ctrl sneak, LMB dig / hit,
 // RMB place, 1-9 or wheel pick a hotbar slot, F3 debug, Esc release the mouse.
+#include "engine/platform/TemplatesDir.h"
 #include "engine/voxel/VoxelSession.h"
 #include "engine/voxel/Project.h"
 #include "engine/voxel/view/VoxelView.h"
@@ -134,7 +135,7 @@ struct App{
 int voxelClientMain(int argc,char** argv){
     try{
         App app;auto engineRoot=platform::resolveEngineDir(AIVERSE_SOURCE_DIR,argv[0]);
-        std::string project=engineRoot+"/templates/voxel_sandbox",connect;
+        std::string project=aiverse::platform::templatesDir(engineRoot)+"/voxel_sandbox",connect;
         for(int i=1;i<argc;++i){std::string a=argv[i];if(a=="--project"&&i+1<argc)project=argv[++i];else if(a=="--connect"&&i+1<argc)connect=argv[++i];else if(a=="--listen")app.listen=true;
             else throw std::runtime_error("usage: AiverseGame [--project DIR] [--listen | --connect udp://host:27200]");}
         project=std::filesystem::absolute(project).string();std::filesystem::current_path(engineRoot);
