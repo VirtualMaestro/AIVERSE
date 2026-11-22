@@ -1874,7 +1874,7 @@ if(AIVERSE_BUILD_CATALOGVIEW AND (AIVERSE_DESKTOP OR EMSCRIPTEN))
         target_link_options(aiverse_catalogview PRIVATE
             "--shell-file=${CMAKE_CURRENT_SOURCE_DIR}/apps/catalogview/shell.html"
             "-sFORCE_FILESYSTEM=1"
-            "-sEXPORTED_FUNCTIONS=['_main','_cv_select','_cv_shape','_cv_lod','_cv_wire','_cv_clusters']"
+            "-sEXPORTED_FUNCTIONS=['_main','_cv_select','_cv_shape','_cv_lod','_cv_wire','_cv_clusters','_cv_zoom']"
             "-sEXPORTED_RUNTIME_METHODS=['FS','ccall','UTF8ToString']")
         set_property(TARGET aiverse_catalogview APPEND PROPERTY LINK_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/apps/catalogview/shell.html")
     endif()
@@ -2464,7 +2464,8 @@ endif()
 
 # Project import (shared Python pipeline + editor/MCP bridge).
 if(TARGET aiverse_editor_core)
-    target_sources(aiverse_editor_core PRIVATE apps/editor/core/PortOps.cpp apps/editor/core/PackageOps.cpp)
+    target_sources(aiverse_editor_core PRIVATE apps/editor/core/PortOps.cpp apps/editor/core/PackageOps.cpp
+        apps/editor/core/PackageTool.cpp)
 endif()
 if(AIVERSE_BUILD_TESTS AND Python3_Interpreter_FOUND)
     add_test(NAME project_importer COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/tools/importers/port/test_port.py)
