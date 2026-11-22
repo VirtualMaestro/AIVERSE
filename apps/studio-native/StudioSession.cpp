@@ -1083,18 +1083,8 @@ Json StudioSession::dispatchImpl(const Json& request) {
                 }
             if(!found)throw std::runtime_error("Light entity no longer exists");
         }
-        if (method == "studio.hubTemplates") {
-            // Template packages of the catalog: {all, query, refresh}. all=false: the start-screen list
-            // (official catalog templates + engine templates the catalog does not replace).
-            std::string error;
-            Json list=Json::array();
-            const bool all=params.getBool("all");
-            const auto found=all ? editor::catalogTemplates(ws_.engineDir,true,params.getStr("query"),false,params.getBool("refresh"),&error)
-                                 : editor::hubTemplates(ws_.engineDir,false,&error);
-            for(const auto& t:found)list.push(templateJson(t));
-            Json out=Json::object();out.set("templates",list);
-            if(!error.empty())out.set("error",str(error));
-            reply.set("result",std::move(out));
+        if (method == "studio.hubTemplates") {   // StudioHost runs this off the UI thread; kept for other hosts
+            reply.set("result",hubTemplatesJson(ws_.engineDir,params));
             return reply;
         }
         if (method == "studio.hub") {
@@ -2710,5 +2700,18 @@ Json StudioSession::dispatchImpl(const Json& request) {
         reply.set("error", str(ex.what()));
     }
     return reply;
+}
+// Template packages of the catalog: {all, query, refresh}. all=false: the start-screen list (official catalog
+// templates + engine templates the catalog does not replace). Runs aiverse_pkg.py (network): call off the UI thread.
+Json hubTemplatesJson(const std::string& engineDir, const Json& params) {
+    std::string error;
+    Json list=Json::array();
+    const bool all=params.getBool("all");
+    const auto found=all ? editor::catalogTemplates(engineDir,true,params.getStr("query"),false,params.getBool("refresh"),&error)
+                         : editor::hubTemplates(engineDir,false,&error);
+    for(const auto& t:found)list.push(templateJson(t));
+    Json out=Json::object();out.set("templates",list);
+    if(!error.empty())out.set("error",str(error));
+    return out;
 }
 }
