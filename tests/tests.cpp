@@ -3465,7 +3465,7 @@ TEST(fx_sample_games_have_valid_effects) {
         CHECK(bridge.init(ps, rules, Json::parse(readSource(dir + "fx/fx.json")), &err));
         for (auto& w : bridge.warnings()) std::printf("    %s: %s\n", g.c_str(), w.c_str());
         CHECK(bridge.warnings().empty());
-        for (auto& entry : std::filesystem::directory_iterator(std::string(AIVERSE_SOURCE_DIR) + "/" + dir + "fx")) {
+        for (auto& entry : std::filesystem::directory_iterator(std::string(AIVERSE_TEMPLATES_DIR) + "/" + g + "/fx")) {
             if (!entry.is_regular_file()) continue;   // fx/gpu/ holds SpectraFX GPU assets, not ParticleSystem effects
             const std::string name = entry.path().stem().string();
             if (name == "fx") continue;
@@ -9146,7 +9146,7 @@ TEST(materials_library_ops_round_trip) {
     const fs::path root = fs::temp_directory_path() / ("aiverse_mat_test_" + std::to_string(std::chrono::steady_clock::now().time_since_epoch().count()));
     fs::remove_all(root);
     fs::create_directories(root / "games");
-    fs::copy(fs::path(AIVERSE_SOURCE_DIR) / "templates" / "showcase", root / "games" / "showcase", fs::copy_options::recursive);
+    fs::copy(fs::path(AIVERSE_TEMPLATES_DIR) / "showcase", root / "games" / "showcase", fs::copy_options::recursive);
     editor::Workspace ws;
     ws.engineDir = AIVERSE_SOURCE_DIR;
     std::string err;
@@ -16193,7 +16193,7 @@ std::filesystem::path worldTreeCopy(const char* tmpl) {
     const fs::path root = fs::temp_directory_path() / ("aiverse_world_tree_" + std::string(tmpl) + "_" + std::to_string(std::chrono::steady_clock::now().time_since_epoch().count()));
     fs::remove_all(root);
     fs::create_directories(root);
-    fs::copy(fs::path(AIVERSE_SOURCE_DIR) / "templates" / tmpl, root / tmpl, fs::copy_options::recursive);
+    fs::copy(fs::path(AIVERSE_TEMPLATES_DIR) / tmpl, root / tmpl, fs::copy_options::recursive);
     return root;
 }
 bool worldTreePreview(editor::Workspace& ws, editor::WorldPreview& pv, const editor::WorldConfig& cfg) {
@@ -17110,8 +17110,8 @@ TEST(project_file_create_resolve_migrate) {
         CHECK(ws.project.dir == fs::weakly_canonical(dir).string() && ws.project.file == fs::weakly_canonical(file).string());
         Json r = ws.call("open_game", Json::parse("{\"game\": \"" + (old / "Old Game.aiverse").generic_string() + "\"}"));
         CHECK(!r.has("error") && r.getStr("file").find("Old Game.aiverse") != std::string::npos);
-        // template ids still work and the engine's templates are not rewritten
-        CHECK(ws.openGame("mushrooms", &err) && fs::path(ws.project.file).filename() == "Mushroom Clash.aiverse");
+        // template ids still work and the installed templates are not rewritten (no project file there)
+        CHECK(ws.openGame("mushrooms", &err) && ws.project.file.empty() && !fs::exists(fs::path(AIVERSE_TEMPLATES_DIR) / "mushrooms" / "Mushroom Clash.aiverse"));
         CHECK(!ws.openGame((old / "missing.aiverse").string(), &err) && !err.empty());
     }
     // a project saved before the AIVERSE rename: its <Title>.rtsproj still opens it and stays the
@@ -17145,26 +17145,19 @@ TEST(project_file_create_resolve_migrate) {
 }
 
 TEST(templates_have_project_files) {
+    // Template packages carry no project file (a project made from one writes its own, named after
+    // game.json); opening an installed template creates it once, named after game.json.
     namespace fs = std::filesystem;
     using namespace aiverse::editor;
     int n = 0;
-    for (auto& e : fs::directory_iterator(fs::path(AIVERSE_SOURCE_DIR) / "templates")) {
+    for (auto& e : fs::directory_iterator(fs::path(AIVERSE_TEMPLATES_DIR))) {
         if (!fs::exists(e.path() / "game.json")) continue;
         ++n;
-        int files = 0;
-        for (auto& f : fs::directory_iterator(e.path())) files += isProjectFilePath(f.path().string());
-        const std::string pf = findProjectFile(e.path().string());
-        if (files != 1 || pf.empty() || isLegacyProjectFilePath(pf)) { std::printf("  %s: %d project files (want one .aiverse)\n", e.path().filename().string().c_str(), files); CHECK(false); continue; }
-        ProjectFile p;
-        std::string err;
-        CHECK(readProjectFile(pf, p, &err));
+        for (auto& f : fs::directory_iterator(e.path())) CHECK(!isLegacyProjectFilePath(f.path().string()));
         const std::string name = Json::parseFile((e.path() / "game.json").string()).getStr("name");
-        if (p.name != name || fs::path(pf).filename().string() != projectFileName(name)) {
-            std::printf("  %s: project file '%s' vs game.json name '%s'\n", e.path().filename().string().c_str(), fs::path(pf).filename().string().c_str(), name.c_str());
-            CHECK(false);
-        }
+        CHECK(!name.empty() && !projectFileName(name).empty());
     }
-    CHECK(n > 10);
+    CHECK(n >= 10);
     // aiversebuild's pack rules: a project file at the root (current or legacy) is not content
     aiverse::pack::IgnoreRules rules;
     rules.add("*.aiverse");

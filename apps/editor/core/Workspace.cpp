@@ -468,7 +468,7 @@ bool Workspace::openGame(const std::string& idOrDir, std::string* err) {
         const bool isTemplate = dir.rfind(tpl, 0) == 0;
         bool created = false;
         // projects made before project files existed get a .aiverse (migration; a legacy .rtsproj is kept and used);
-        // templates carry a committed one
+        // installed templates (catalog packages) are opened in place and get none
         project.file = isTemplate ? findProjectFile(dir) : ensureProjectFile(dir, &created);
         if (created) log("editor", "Создан файл проекта " + fs::path(project.file).filename().string() + " (двойной клик по нему открывает проект)");
         if (!isTemplate) rememberProject(dir, project.manifest.getStr("name", fs::path(dir).filename().string()), project.file);

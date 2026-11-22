@@ -361,7 +361,7 @@ Pick chooseTemplate(const std::string& engineDir, const WizardSpec& s, const std
         if (!feats.empty()) p.reason += std::string(p.reason.empty() ? "" : "; ") + "механики: " + feats[0] + (feats.size() > 1 ? ", " + feats[1] : "");
         picks.push_back(p);
     }
-    if (picks.empty()) throw std::runtime_error("в templates/ нет шаблонов игр");
+    if (picks.empty()) throw std::runtime_error("не установлены шаблоны игр (python3 tools/pkg/fetch_templates.py)");
     std::stable_sort(picks.begin(), picks.end(), [&](const Pick& a, const Pick& b) {
         if (a.score != b.score) return a.score > b.score;
         return (hashText(a.id) ^ seed) < (hashText(b.id) ^ seed);   // ties: the seed decides, the same answers give the same game
