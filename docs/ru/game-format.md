@@ -2047,7 +2047,7 @@ sips/iconutil — работает и на Linux), клиентом (заста�
   Без `icons` сборка использует знак AIVERSE на белом (`branding::defaultIcon`). Оба
   рисуются из одной геометрии: `tools/branding/logo/make_logo.py` (также иконка редактора,
   `apps/editor/branding`).
-- Пример: `templates/skirmish` (графика сгенерирована `templates/_tools/brandart.py`, CC0).
+- Пример: `templates/skirmish` (графика сгенерирована `tools/templates/brandart.py`, CC0).
 
 ## Рецепты (механики известных игр)
 
@@ -2156,7 +2156,7 @@ sips/iconutil — работает и на Linux), клиентом (заста�
 - **Контрольные суммы**: углы и модель входят в хеш состояния только для игр с полем высот.
 - **Большие карты** (256x256 клеток и больше): длинные пути используют иерархический поиск пути (кластеры 16x16 с входами
   на границах, уточнение A*), построенный в начале матча и перестраиваемый только вокруг строений, блокирующих клетки.
-  `aiverse_headless --project DIR --bench-paths N` замеряет время запросов пути; `python3 templates/_tools/mapgen.py --big 1024
+  `aiverse_headless --project DIR --bench-paths N` замеряет время запросов пути; `python3 tools/templates/mapgen.py --big 1024
   <scratch>/maps/big.json` записывает тестовую карту 1024x1024 (не кладите её в `templates/`).
 
 MCP: `map_info.heightfield` (`corners`, `min`, `max`, `storage`, `model`), `map_heightfield {"enabled"}` добавляет плоское
@@ -2398,7 +2398,7 @@ useTemplate, keepSize}`.
   заряды личинок (когда нагрузка или выдаваемый ею статус добавляет заряды) или что-то в производстве (хроноускорение:
   статус с `{"stat": "productionSpeed", "mul": 1.5}`).
 
-## Примеры игр (только данные, `<project>/`; карты из `templates/_tools/mapgen.py`)
+## Примеры игр (только данные, `<project>/`; карты из `tools/templates/mapgen.py`)
 
 | id | как | рецепт |
 |---|---|---|
@@ -2417,7 +2417,7 @@ useTemplate, keepSize}`.
 | `borderrush` | State.io (портрет) | `territory` с `claimBy: units` + `startFromRegions`, солдаты с `claim`, столица и города с `autoTrain`, захватываемые города `capturable`, `playerAbilities` (авиаудар, дроны с зарядами), уровневые технологии, включая `productionSpeed`, `victory: territory` |
 | `hearthhaul` | Knights and Merchants | `storage: buildings`, склад, цепочки рецептов (дровосек → лесопилка, ферма → мельница → пекарня, оружейная), крепостные `carrier`, `roadNetwork`, доставляемые стройматериалы, `trainFrom: recruit`, `needs` таверны со `starve` |
 | `sporelanes` | Mushroom Wars 2 | ульи/хижины/башни с `garrison`, `lanes` вместо `roads` |
-| `planets` | Total Annihilation на планетах | правила metaltide на планете + луне (блок `world`, позиции `at`), `orbital_yard` → `gunship` (`move.layer: orbit`, `transitSpeed`), оборонительное оружие с `targets: orbit`; карта из `templates/_tools/planetgen.py` |
+| `planets` | Total Annihilation на планетах | правила metaltide на планете + луне (блок `world`, позиции `at`), `orbital_yard` → `gunship` (`move.layer: orbit`, `transitSpeed`), оборонительное оружие с `targets: orbit`; карта из `tools/templates/planetgen.py` |
 | `spellbunkers` | навыки Bunker Wars / Mushroom Wars 2 | sporelanes + `regen` маны/морали, именованные `statuses`, 26 навыков игрока (цели — сооружение / группа / игрок, области, движущиеся вдоль линий, цепочки по сооружениям), `loadout` из 16 на игрока, навык карты `autoEvery` и `passive` |
 | `shroomwars` | Mushroom Wars 2 | уровни и превращения, оплачиваемые юнитами, кузницы, стычки, мораль, энергия, наборы навыков героев |
 

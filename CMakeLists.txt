@@ -94,13 +94,45 @@ if(AIVERSE_TEXTURE_WITH_LIBKTX)
     target_compile_definitions(aiverse_texture_libktx INTERFACE AIVERSE_TEXTURE_WITH_LIBKTX=1)
 endif()
 
+# Sample games: the official template packages of the package catalog (AIVERSE-PACKAGES), installed into one
+# folder by tools/pkg/fetch_templates.py and named by engine id (skirmish, mushrooms, ...). Tests, the default
+# client content and CI read them from here; the engine repository itself carries no games.
+if(DEFINED ENV{AIVERSE_TEMPLATES_DIR})
+    set(_aiverse_templates_default "$ENV{AIVERSE_TEMPLATES_DIR}")
+elseif(DEFINED ENV{AIVERSE_PACKAGES_HOME})
+    set(_aiverse_templates_default "$ENV{AIVERSE_PACKAGES_HOME}/templates")
+elseif(WIN32 AND DEFINED ENV{USERPROFILE})
+    set(_aiverse_templates_default "$ENV{USERPROFILE}/.aiverse/packages/templates")
+else()
+    set(_aiverse_templates_default "$ENV{HOME}/.aiverse/packages/templates")
+endif()
+file(TO_CMAKE_PATH "${_aiverse_templates_default}" _aiverse_templates_default)
+set(AIVERSE_TEMPLATES_DIR "${_aiverse_templates_default}" CACHE PATH "Installed template packages (sample games)")
+file(TO_CMAKE_PATH "${AIVERSE_TEMPLATES_DIR}" AIVERSE_TEMPLATES_DIR)
+option(AIVERSE_FETCH_TEMPLATES "Install the template packages at configure time when they are missing" ON)
+find_package(Python3 COMPONENTS Interpreter QUIET)
+if(AIVERSE_FETCH_TEMPLATES AND NOT EXISTS "${AIVERSE_TEMPLATES_DIR}/skirmish/game.json")
+    if(Python3_Interpreter_FOUND)
+        message(STATUS "Installing the template packages into ${AIVERSE_TEMPLATES_DIR}")
+        execute_process(COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/tools/pkg/fetch_templates.py"
+                                --out "${AIVERSE_TEMPLATES_DIR}" RESULT_VARIABLE _aiverse_fetch OUTPUT_QUIET)
+        if(NOT _aiverse_fetch EQUAL 0)
+            message(WARNING "Could not install the template packages (offline?): tests that play the sample games will fail. "
+                            "Run python3 tools/pkg/fetch_templates.py later.")
+        endif()
+    endif()
+endif()
+add_compile_definitions(AIVERSE_TEMPLATES_DIR="${AIVERSE_TEMPLATES_DIR}")
+add_custom_target(aiverse_fetch_templates
+    COMMAND "$<IF:$<BOOL:${Python3_EXECUTABLE}>,${Python3_EXECUTABLE},python3>" "${CMAKE_CURRENT_SOURCE_DIR}/tools/pkg/fetch_templates.py" --out "${AIVERSE_TEMPLATES_DIR}"
+    COMMENT "Installing / updating the template packages" VERBATIM)
+
 # Game being built (aiversebuild overrides these).
-set(AIVERSE_CONTENT_DIR "${CMAKE_CURRENT_SOURCE_DIR}/templates/skirmish" CACHE PATH "Game content folder (contains game.json)")
-# build folders configured before games/ became templates/ keep the old cached path
-if(NOT EXISTS "${AIVERSE_CONTENT_DIR}/game.json" AND AIVERSE_CONTENT_DIR MATCHES "/games/")
-    string(REPLACE "/games/" "/templates/" _aiverse_content "${AIVERSE_CONTENT_DIR}")
-    if(EXISTS "${_aiverse_content}/game.json")
-        set(AIVERSE_CONTENT_DIR "${_aiverse_content}" CACHE PATH "Game content folder (contains game.json)" FORCE)
+set(AIVERSE_CONTENT_DIR "${AIVERSE_TEMPLATES_DIR}/skirmish" CACHE PATH "Game content folder (contains game.json)")
+# build folders configured when the sample games lived in the engine (games/, then templates/) keep working
+if(NOT EXISTS "${AIVERSE_CONTENT_DIR}/game.json" AND AIVERSE_CONTENT_DIR MATCHES "/(games|templates)/([^/]+)/?$")
+    if(EXISTS "${AIVERSE_TEMPLATES_DIR}/${CMAKE_MATCH_2}/game.json")
+        set(AIVERSE_CONTENT_DIR "${AIVERSE_TEMPLATES_DIR}/${CMAKE_MATCH_2}" CACHE PATH "Game content folder (contains game.json)" FORCE)
     endif()
 endif()
 set(AIVERSE_ENGINE_ASSETS "${CMAKE_CURRENT_SOURCE_DIR}/engine/assets")
@@ -2075,7 +2107,7 @@ endif()
 
 # ---------------------------------------------------------------------------
 # In-game UI (UI agent): RmlUi (HTML/CSS) rendered through the RHI, fonts via stb_truetype.
-# Documents live in engine/assets/ui; a game overrides any of them with templates/<id>/ui/<same name>.
+# Documents live in engine/assets/ui; a game overrides any of them with <game>/ui/<same name>.
 # ---------------------------------------------------------------------------
 file(GLOB AIVERSE_RMLUI_SRC CONFIGURE_DEPENDS
     third_party/rmlui/Source/Core/*.cpp third_party/rmlui/Source/Core/Elements/*.cpp
@@ -2872,7 +2904,7 @@ endif()
 if(AIVERSE_BUILD_TESTS)
     add_executable(aiverse_library_aiverse_bot_tests tests/libraries/bots/aiverse_tests.cpp)
     target_link_libraries(aiverse_library_aiverse_bot_tests PRIVATE AIVERSE::aiverse_bots)
-    add_test(NAME library_aiverse_bots COMMAND aiverse_library_aiverse_bot_tests ${PROJECT_SOURCE_DIR}/templates/skirmish)
+    add_test(NAME library_aiverse_bots COMMAND aiverse_library_aiverse_bot_tests ${AIVERSE_TEMPLATES_DIR}/skirmish)
 endif()
 if(TARGET aiverse_fps AND (AIVERSE_BUILD_TESTS OR AIVERSE_BUILD_TOOLS))
     add_executable(aiverse_bot_match examples/libraries/bots/main.cpp)

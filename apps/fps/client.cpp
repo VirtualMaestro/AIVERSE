@@ -1,3 +1,4 @@
+#include "engine/platform/TemplatesDir.h"
 #include <aiverselib/net/Admission.h>
 #include "engine/game/GameCore.h"
 #include "engine/net/authority/Session.h"
@@ -1288,7 +1289,7 @@ struct App {
 int actorClientMain(int argc,char** argv) {
     try {
         App app;auto engineRoot=platform::resolveEngineDir(AIVERSE_SOURCE_DIR,argv[0]);
-        std::string sessionTokenFile;std::string project=engineRoot+"/templates/fps_training",connect;
+        std::string sessionTokenFile;std::string project=aiverse::platform::templatesDir(engineRoot)+"/fps_training",connect;
         for(int i=1;i<argc;++i){std::string arg=argv[i];if(arg=="--project"&&i+1<argc)project=argv[++i];else if(arg=="--connect"&&i+1<argc)connect=argv[++i];else if(arg=="--session-token-file"&&i+1<argc)sessionTokenFile=argv[++i];else if(arg=="--listen")app.listen=true;else throw std::runtime_error("usage: AiverseGame --project DIR [--connect udp://host:27100 | --listen] [--session-token-file FILE]");}
         project=std::filesystem::absolute(project).string();
         std::filesystem::current_path(engineRoot);
