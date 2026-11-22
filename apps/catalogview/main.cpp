@@ -628,6 +628,13 @@ CV_EXPORT void cv_lod(int level) {
     if (!g_app->dev) { g_app->lod = level; return; }
     g_app->setLod(level);
 }
+// Pinch zoom from the page (two-finger gestures never reach the orbit drag): factor > 1 moves closer.
+CV_EXPORT void cv_zoom(float factor) {
+    if (!g_app || !(factor > 0.f)) return;
+    g_app->cam.distance = std::clamp(g_app->cam.distance / factor, g_app->cam.minDistance, g_app->cam.maxDistance);
+    g_app->autoRotate = false;
+    g_app->idle = 0;
+}
 CV_EXPORT void cv_wire(int on) {
     if (!g_app) return;
     if (!g_app->dev) { g_app->wire = on != 0; return; }
