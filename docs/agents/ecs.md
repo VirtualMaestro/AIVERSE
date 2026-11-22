@@ -160,7 +160,7 @@ Select physical sweep, non-physical pursuit or instant hitscan per *weapon
 capability*, never per genre.
 
 **FPS projectile state migration, current branch:** in
-`fps.ecsAuthority=true`, `fps.compat.projectilePrograms` now runs
+`actor.ecsAuthority=true`, `actor.compat.projectilePrograms` now runs
 `Module::stepProgrammedProjectile` directly against authoritative
 `ProjectileRuntime` components, sorting by recorded `order`/ID and applying
 immediate hits before actor updates. The default FPS mode calls that **same**
@@ -181,9 +181,9 @@ parity; see `ecsProjectileProgramStageParity` and
 Native test execution is still pending.
 
 **Live FPS ordinary projectile ECS stage (2026-11-18):**
-When `fps.ecsAuthority=true`, both the programmed and ordinary
+When `actor.ecsAuthority=true`, both the programmed and ordinary
 projectile flight stages now advance **canonical ProjectileRuntime ECS
-components**. Ordering is `fps.ecsHydrate -> fps.compat.projectilePrograms
+components**. Ordering is `actor.ecsHydrate -> fps.compat.projectilePrograms
 -> fps.compat.ordinaryProjectiles -> fps -> fps.ecsMirror`.
 The ordinary-stage `stepOrdinaryProjectile` solver is reused by the
 legacy mode and ECS mode, preserves exact instantaneous hit/fuse/smoke
@@ -202,10 +202,10 @@ reload), `ecsProjectileProgramStageParity`, `ecs_projectile_composition_test`,
 All these native results are currently unverified.
 
 **Critical FPS projectile single-writer rule (2026-11-18):**
-When `fps.ecsAuthority=true`, the **entire live FPS projectile lifecycle**
+When `actor.ecsAuthority=true`, the **entire live FPS projectile lifecycle**
 (accepted weapon and grenade spawn, programmed/ordinary flight, impacts,
 smoke expiry and bomb-round reset) now writes canonical
-`ProjectileRuntime` ECS components. `fps.ecsMirror` must use
+`ProjectileRuntime` ECS components. `actor.ecsMirror` must use
 `syncDynamicEntities(sim,true)` to derive `State::projectiles` as a
 one-way legacy/save/network representation, **never** copying stale
 State values back onto Runtime. Preserve the original
@@ -227,12 +227,12 @@ latest FPS stages A–S. After EVERY implementation commit, append the exact
 SHA, changed files, behavior, verification status and next action to the
 handoff in a separate documentation commit before taking another action.
 
-`fps.ecsAuthority` is an experimental default-OFF storage migration gate.
+`actor.ecsAuthority` is an experimental default-OFF storage migration gate.
 When ON, full `ActorRuntime`, `ProjectileRuntime`, `LootRuntime` and
 `VehicleRuntime` components are canonical between ticks and define
-checksum/save v9 entity payloads. `fps.ecsHydrate` creates the ordered
+checksum/save v9 entity payloads. `actor.ecsHydrate` creates the ordered
 legacy tick workspace; old algorithms not yet migrated still read/write it.
-`fps.ecsMirror` commits the tick results to ECS and refreshes read-only
+`actor.ecsMirror` commits the tick results to ECS and refreshes read-only
 Editor projections. Commands, actor motor and centralized damage already
 have direct ECS code paths. **Do NOT call the migration complete.**
 

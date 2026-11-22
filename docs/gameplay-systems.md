@@ -154,5 +154,5 @@ durability, absorbed share and wear in milli, covered hit-zone bits, carry capac
 actor. `absorbHit` lets each covering piece in slot order take its share of the remaining damage, capped by its
 durability, wears it and removes broken pieces; `equipGear` returns the replaced piece for the loot owner;
 `betterGear` orders pieces (tier, then remaining share); `gearCapacity` sums capacity. Integer math, bounded,
-`io` / `gearHash` for saves and checksums. FPS wiring: `fps.gear` (docs/fps.md § Gear). Recipe:
+`io` / `gearHash` for saves and checksums. FPS wiring: `actor.gear` (docs/fps.md § Gear). Recipe:
 `skills/gameplay/aiverse-gear-tiers/SKILL.md`; tests: `tests/libraries/gear_tests.cpp`.

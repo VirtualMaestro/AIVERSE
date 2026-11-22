@@ -415,7 +415,7 @@ docker build -f apps/server/Dockerfile -t aiverse-server .             # сер�
 
 `engine/audio` — микшер, банки звуков из данных, процедурный синтез, музыка; вывод через
 [miniaudio](../../third_party/miniaudio) (CoreAudio, AAudio/OpenSL ES, Web Audio, WASAPI, ALSA/PulseAudio).
-`modules/rts/audio` превращает события симуляции в звуки; в симуляцию ничего не пишет.
+`engine/audio` превращает события симуляции в звуки; в симуляцию ничего не пишет.
 Нет устройства — игра идёт молча. Нет `audio.json` — игра просто без звука.
 
 Звук игры — файл `audio.json` рядом с `game.json` (другое имя: `"audio"` в game.json). Полное описание

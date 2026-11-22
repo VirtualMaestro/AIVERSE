@@ -351,6 +351,28 @@ def load_releases():
     return json.loads(RELEASES.read_text(encoding='utf-8'))
 
 
+def shipped_entries(rel_data):
+    """Ids of devlog entries already in the latest release (present in its tagged commit).
+
+    Entries written on the release day after the tag are new work, so the date alone cannot tell
+    them apart. None when git or the tag is unavailable (then the page falls back to dates)."""
+    rels = rel_data.get('releases') or []
+    if not rels:
+        return None
+    ref = rels[0].get('tag') or rels[0].get('commit')
+    try:
+        out = subprocess.run(['git', 'ls-tree', '--name-only', ref, 'docs/devlog/entries/'],
+                             cwd=ROOT, capture_output=True, text=True, check=True).stdout
+    except (OSError, subprocess.CalledProcessError):
+        try:
+            out = subprocess.run(['git', 'ls-tree', '--name-only', rels[0].get('commit', ''),
+                                  'docs/devlog/entries/'], cwd=ROOT, capture_output=True, text=True,
+                                 check=True).stdout
+        except (OSError, subprocess.CalledProcessError):
+            return None
+    return {Path(p).stem for p in out.split() if p.endswith('.json')}
+
+
 def check_releases():
     p = 'releases.json'
     try:
@@ -532,6 +554,7 @@ def cmd_build(args):
                 link['href'] = f'{manifest["repoBlob"]}/{link["href"]}'
     layout = (SITE / '_layout.html').read_text(encoding='utf-8')
     rel_data = load_releases()
+    rel_data['_shipped'] = shipped_entries(rel_data)
     for r in rel_data.get('releases') or []:
         for h in r.get('highlights') or []:
             for m in h.get('media') or []:

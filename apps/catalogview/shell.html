@@ -50,7 +50,12 @@
   var q = new URLSearchParams(location.search);
   var src = (q.get('src') || '').replace(/\/+$/, '');
   var first = parseInt(q.get('item') || '0', 10) || 0;
-  var ru = (q.get('lang') || navigator.language || '').toLowerCase().indexOf('ru') === 0;
+  var lang = q.get('lang') || navigator.language || 'en';
+  var ru = lang.toLowerCase().indexOf('ru') === 0;
+  // item titles: "title" is English, translations are "title-<lang>" (title-ru, title-zh-CN, ...)
+  function itemTitle(it) {
+    return it['title-' + lang] || it['title-' + lang.split('-')[0]] || it.title || it.id;
+  }
   var L = ru ? {
     loading: 'Загружаем…', building: 'Строим кластеры STRATA…', webgl: 'В этом браузере нет WebGL 2', nosrc: 'Не указан пакет (?src=)',
     error: 'Ошибка: подробности в консоли браузера', hint: 'перетаскивание · колесо',
@@ -91,7 +96,7 @@
   function texLines(list) {
     if (!list || !list.length) return '<div class="muted">' + L.noTex + '</div>';
     return list.map(function (m) {
-      var name = L.maps[m.map] || m.map, file = (m.file || '').split('/').pop();
+      var name = L.maps[m.map] || m.map, file = (m.file || '').split('/').pop().replace(/#t\d+$/, '');
       return '<div><b>' + esc(name) + '</b> ' + m.width + '×' + m.height + (m.bytes ? ' · ' + size(m.bytes) : '') +
         (m.map === 'image' && file ? ' <span class="muted">' + esc(file) + '</span>' : '') + '</div>';
     }).join('');
@@ -108,7 +113,8 @@
       });
       if (info.generatedLevels) h += '<div class="muted">' + L.gen + '</div>';
       var s = info.strata || {};
-      if (s.state === 'ready') h += '<div' + (info.mode === 'strata' ? ' class="on"' : '') + '>STRATA · ' + num(s.clusters) + ' ' + L.strataReady + ' · ' + s.stageMs + ' ' + L.strataMs + '</div>';
+      if (s.state === 'ready') h += '<div' + (info.mode === 'strata' ? ' class="on"' : '') + '>STRATA · ' + num(s.clusters) + ' ' + L.strataReady +
+        (info.mode === 'strata' && s.drawnTriangles ? ' · ' + num(s.drawnTriangles) + ' ' + L.tris + ' · ' + L.shown : '') + ' · ' + s.stageMs + ' ' + L.strataMs + '</div>';
       else if (s.state === 'declined' || s.state === 'failed') h += '<div class="muted">STRATA: ' + esc(s.reason || s.state) + '</div>';
       h += '<div class="muted" style="margin-top:4px">' + L.textures + '</div>' + texLines(info.textures);
     }
@@ -135,9 +141,10 @@
       for (var l = 0; l < levels; ++l) (function (l) { button(modes, L.lod + l, state.lod === l, function () { setLod(l); }); })(l);
       var s = info && info.strata;
       button(modes, L.strata, state.lod === -2, function () { setLod(-2); }, s && (s.state === 'declined' || s.state === 'failed'));
-      sep(modes);
-      button(modes, L.wire, state.wire, function () { state.wire = !state.wire; Module._cv_wire(state.wire ? 1 : 0); renderModes(); });
-      if (state.lod === -2) button(modes, L.clusters, state.clusters, function () { state.clusters = !state.clusters; Module._cv_clusters(state.clusters ? 1 : 0); renderModes(); });
+      if (state.lod === -2 && s && s.state === 'ready') {
+        sep(modes);
+        button(modes, L.clusters, state.clusters, function () { state.clusters = !state.clusters; Module._cv_clusters(state.clusters ? 1 : 0); renderModes(); });
+      }
     }
     modes.hidden = false;
   }
@@ -173,6 +180,7 @@
     busy = true; busyOn(L.loading);
     fetchAll(view.items[i].files || []).then(function () {
       Module._cv_select(i); busyOff();
+      if (window.parent !== window) window.parent.postMessage({ cv: 'item', item: i }, '*');   // the catalog page links to it
       bar.querySelectorAll('button').forEach(function (b, k) { b.setAttribute('aria-pressed', String(k === i)); });
     }).catch(function (e) { fail(String(e.message || e)); }).then(function () { busy = false; });
   }
@@ -195,7 +203,7 @@
           return fetchAll((view.shared || []).concat(view.items[first].files || []));
         })
         .then(function () {
-          view.items.forEach(function (it, k) { button(bar, it.title || it.id, k === first, function () { select(k); }); });
+          view.items.forEach(function (it, k) { button(bar, itemTitle(it), k === first, function () { select(k); }); });
           if (view.items.length < 2) bar.hidden = true;
           if (state.lod === -2) statusEl.textContent = L.building;
           renderModes();

@@ -6,7 +6,7 @@ project). The editor's empty project copies `textures/` into `<project>/material
 and merges the library into the project's `materials.json`.
 
 The full terrain library (grass, soils, sands, rock, snow and more, with this checkerboard) is the
-catalog package **terrain-pbr** in AIVERSE-PLUGINS:
+catalog package **terrain-pbr** in AIVERSE-PACKAGES:
 
 ```sh
 python3 tools/pkg/aiverse_pkg.py add terrain-pbr --project <project>

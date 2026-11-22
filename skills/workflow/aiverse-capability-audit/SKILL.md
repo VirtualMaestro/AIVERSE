@@ -31,7 +31,7 @@ Use before any feasibility estimate, gap list, plan for a game or claim such as 
 
 | Area | Where | Typical wrong assumption |
 |---|---|---|
-| Simulation hosts | `engine/game` (GameCore, the one host), `engine/actor` (actor systems on world-space maps), `modules/strategic`, `engine/voxel`, `docs/topdown.md`, `docs/no-genre-split-audit.md` | "AIVERSE is only an RTS engine"; "feature X is for genre Y" - every capability must work in any project; a feature hosted by one legacy module is extraction debt (G1-G9), never a genre limit |
+| Simulation hosts | `engine/game` (GameCore, the one host), `engine/actor` (actor systems on world-space maps), `engine/game/Strategic.h`, `engine/voxel`, `docs/topdown.md`, `docs/no-genre-split-audit.md` | "AIVERSE is only an RTS engine"; "feature X is for genre Y" - every capability must work in any project; a feature hosted by one legacy module is extraction debt (G1-G9), never a genre limit |
 | Large worlds | `docs/large-worlds.md`, `engine/world`, `examples/world/streamed`, `templates/fps_survival` | "maps are capped at 2048x2048" - streamed chunk worlds exist (static content; see W1/W2 for mutable) |
 | Networking | `docs/battle-net.md` (lockstep + rollback relay, `engine/net/server`), `docs/fps.md` (authoritative server: prediction/reconciliation, snapshots, interest filtering, hitscan rewind, `engine/net/authority`), `docs/city-server.md` (persistent authoritative world, clients run no sim, `engine/net/city`) | "networking is lockstep only" |
 | Physics | `docs/physics.md` (optional Box3D, `engine/physics`), `skills/gameplay/aiverse-physics` | "no rigid bodies" |

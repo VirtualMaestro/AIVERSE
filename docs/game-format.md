@@ -1574,7 +1574,7 @@ Bots send their fighters at the nearest enemy once per turn and end the turn whe
 
 ### Strategic map (Total War campaign, Company of Heroes 3, Empire at War)
 
-`modules/strategic/Strategic.h`: provinces and armies on top of the game's `rules.json`; battles are auto-resolved
+`engine/game/Strategic.h`: provinces and armies on top of the game's `rules.json`; battles are auto-resolved
 (Lanchester square law on hp x dps) or simulated on the RTS simulation with bots, and the survivors return to the map.
 
 ```json

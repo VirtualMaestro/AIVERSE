@@ -3,7 +3,8 @@
 
 The engine repository ships code and a minimal set of assets. Heavy optional content (PBR material
 libraries, their source images, sample projects) lives in the package catalog
-(https://github.com/chromealex/AIVERSE-PLUGINS): an index.json plus one .zip per package version
+(https://github.com/chromealex/AIVERSE-PACKAGES): a short index.json ({id, category, path} per package),
+each package folder with aiverse.package.json and versions.json, one .zip per package version
 attached to a GitHub release. This tool finds, downloads, verifies and installs those packages.
 
   aiverse_pkg.py search [words] [--kind K] [--category C]
@@ -18,7 +19,7 @@ attached to a GitHub release. This tool finds, downloads, verifies and installs 
                                                  with --project installs them
   aiverse_pkg.py create <template-id> <folder>   new project folder from a template package
 
-Packages are added to the catalog by pull request to AIVERSE-PLUGINS (its tools/catalog.py builds,
+Packages are added to the catalog by pull request to AIVERSE-PACKAGES (its tools/catalog.py builds,
 checks and publishes them); this tool only consumes the catalog.
 
 Every command accepts --json (machine-readable output for MCP and agents).
@@ -43,10 +44,11 @@ import urllib.request
 import zipfile
 from pathlib import Path
 
-SCHEMA = 1
+SCHEMA = 1        # aiverse.lock
+INDEX_SCHEMA = 2  # catalog index.json: {id, category, path}; the rest is in the package folder
 MANIFEST = 'aiverse.package.json'
 LOCK = 'aiverse.lock'
-CATALOG_REPO = 'chromealex/AIVERSE-PLUGINS'
+CATALOG_REPO = 'chromealex/AIVERSE-PACKAGES'
 DEFAULT_INDEX = f'https://raw.githubusercontent.com/{CATALOG_REPO}/main/index.json'
 KINDS = ('content', 'template', 'source', 'script', 'plugin', 'tool')
 ID_RE = re.compile(r'^[a-z0-9][a-z0-9-]{1,62}$')
@@ -187,16 +189,45 @@ def load_index(refresh: bool = False) -> dict:
         if cached.exists():
             return read_json(cached)
         raise PkgError(f'cannot read the package index {src}: {e}')
-    if data.get('schema') != SCHEMA:
+    if data.get('schema') != INDEX_SCHEMA:
         raise PkgError(f'{src}: unsupported index schema {data.get("schema")}')
     write_json(cached, data)
     return data
 
 
-def index_entry(index: dict, pkg: str) -> dict:
+def catalog_url(path: str) -> str:
+    """A file of the catalog repository, next to index.json (URL or local folder)."""
+    src = index_source()
+    if '://' in src and not src.startswith('file://'):
+        return src.rsplit('/', 1)[0] + '/' + path
+    base = Path(urllib.parse.urlparse(src).path if src.startswith('file://') else src).parent
+    return str(base / path)
+
+
+def package_entry(item: dict, refresh: bool = False) -> dict:
+    """One package: its index line + <path>/aiverse.package.json + <path>/versions.json (cached for offline use)."""
+    cached = home() / 'index-cache' / (hashlib.sha256(index_source().encode()).hexdigest()[:16] + f"-{item['id']}.json")
+    if not refresh and offline() and cached.exists():
+        return read_json(cached)
+    try:
+        manifest = json.loads(fetch_bytes(catalog_url(f"{item['path']}/{MANIFEST}")).decode('utf-8'))
+        published = json.loads(fetch_bytes(catalog_url(f"{item['path']}/versions.json")).decode('utf-8'))
+    except Exception as e:
+        if cached.exists():
+            return read_json(cached)
+        raise PkgError(f"cannot read package {item['id']} from the catalog: {e}")
+    entry = dict(manifest, **item)
+    for k in ('latest', 'versions', 'previews', 'readme', 'viewer'):
+        if k in published:
+            entry[k] = published[k]
+    write_json(cached, entry)
+    return entry
+
+
+def index_entry(index: dict, pkg: str, refresh: bool = False) -> dict:
     for e in index.get('packages', []):
         if e.get('id') == pkg:
-            return e
+            return package_entry(e, refresh)
     raise PkgError(f"package '{pkg}' is not in the catalog (aiverse_pkg.py search)")
 
 
@@ -284,7 +315,7 @@ def package_files(src: Path) -> list[str]:
     return out
 
 
-def install_into(project: Path, pkg: str, spec: str | None, force: bool, log) -> dict:
+def install_into(project: Path, pkg: str, spec: str | None, force: bool, log, _chain: tuple = ()) -> dict:
     game_path, lock_path = project_paths(project)
     src = fetch(pkg, spec, log)
     manifest = read_json(src / MANIFEST)
@@ -294,6 +325,18 @@ def install_into(project: Path, pkg: str, spec: str | None, force: bool, log) ->
     if not mount:
         raise PkgError(f"package '{pkg}' ({manifest.get('kind')}) is not installed into projects; "
                        f"use 'fetch' to get its folder")
+    # content dependencies go into the project first: a model pack refers to the textures of the
+    # material package it depends on instead of carrying copies (every texture once)
+    deps = []
+    for dep, dspec in (manifest.get('dependencies') or {}).items():
+        if dep in _chain or dep == pkg:
+            raise PkgError(f"dependency cycle: {' -> '.join(_chain + (pkg, dep))}")
+        have = read_json(lock_path, {'packages': {}}).get('packages', {}).get(dep)
+        if have and (not dspec or matches(have['version'], dspec)):
+            continue
+        dm = read_json(fetch(dep, dspec, log) / MANIFEST)
+        if (dm.get('install') or {}).get('mount'):
+            deps.append(install_into(project, dep, dspec, force, log, _chain + (pkg,)))
     lock = read_json(lock_path, {'schema': SCHEMA, 'packages': {}})
     previous = lock['packages'].get(pkg)
     if previous:
@@ -334,8 +377,11 @@ def install_into(project: Path, pkg: str, spec: str | None, force: bool, log) ->
     lock['packages'][pkg] = entry
     lock['packages'] = dict(sorted(lock['packages'].items()))
     write_json(lock_path, lock)
-    return {'id': pkg, 'version': manifest['version'], 'mount': mount, 'files': len(files),
-            'merged': {k: len(v) for k, v in merged.items()}}
+    r = {'id': pkg, 'version': manifest['version'], 'mount': mount, 'files': len(files),
+         'merged': {k: len(v) for k, v in merged.items()}}
+    if deps:
+        r['dependencies'] = deps
+    return r
 
 
 def uninstall_from(project: Path, pkg: str, lock: dict, keep_listing: bool = False) -> int:
@@ -403,18 +449,19 @@ def cmd_search(a):
     index = load_index(refresh=True)
     words = [w.lower() for w in a.words]
     out = []
-    for e in index.get('packages', []):
+    for item in index.get('packages', []):
+        if a.category and item.get('category') != a.category:
+            continue
+        e = package_entry(item, refresh=True)
         if a.kind and e.get('kind') != a.kind:
             continue
-        if a.category and e.get('category') != a.category:
-            continue
-        hay = ' '.join([e['id'], e.get('category', ''), e.get('title', ''), e.get('titleEn', ''),
-                        e.get('summary', ''), e.get('summaryEn', ''), ' '.join(e.get('tags', [])),
-                        json.dumps(e.get('provides', {}))]).lower()
+        texts = [v for k, v in e.items() if k.split('-', 1)[0] in ('title', 'summary') and isinstance(v, str)]
+        hay = ' '.join([e['id'], e.get('category', ''), *texts, ' '.join(e.get('tags', [])),
+                        json.dumps(e.get('provides', {}), ensure_ascii=False)]).lower()
         if all(w in hay for w in words):
             latest = e['versions'][e['latest']]
             out.append({'id': e['id'], 'kind': e.get('kind'), 'category': e.get('category'),
-                        'title': e.get('titleEn') or e.get('title'), 'latest': e['latest'],
+                        'title': e.get('title'), 'latest': e['latest'],
                         'minEngine': latest.get('minEngine'), 'size': latest.get('size'),
                         'cached': e['latest'] in installed_versions(e['id'])})
     return out
@@ -474,7 +521,7 @@ def run(a, log):
     if a.cmd == 'search':
         return cmd_search(a)
     if a.cmd == 'info':
-        e = index_entry(load_index(refresh=True), a.id)
+        e = index_entry(load_index(refresh=True), a.id, refresh=True)
         return dict(e, cached=installed_versions(a.id))
     if a.cmd in ('fetch', 'path'):
         pkg, spec = split_ref(a.ref)

@@ -92,7 +92,7 @@ WORKFLOWS=[
  ('aiverse-lens-native','LENS native multi-camera scheduling, prepared-frame replay and GPU capture ownership','docs/camera-system.md'),
 
  ('aiverse-scene-entities','Native scene entity and component MCP authoring with stable light identity','docs/studio-light-entities.md'),
- ('aiverse-packages','Optional content from the AIVERSE-PLUGINS catalog: search, install into projects, lock, verify, publish by PR','docs/packages.md'),
+ ('aiverse-packages','Optional content from the AIVERSE-PACKAGES catalog: search, install into projects, lock, verify, publish by PR','docs/packages.md'),
  ('aiverse-lighting','Light entity authoring, probe GI and Luma through native MCP and shared runtime','docs/dynamic-gi.md'),
  ('studio-ui','HTML5 Studio editor windows with shared UI v1 components, typed native bridge and visual QA','docs/studio-design-system.md'),
  ('aiverse-human-creator','VIVID digital humans: DNA skin/eyes/hair/proportions, 52 rest channels, routes, rig and skin edits via human_* MCP or Studio Human Creator','docs/vivid.md'),
@@ -134,6 +134,7 @@ WORKFLOWS=[
  ('aiverse-docs-upkeep','README and translations, translated docs, format sections, readme check','tools/readme/check.py'),
  ('aiverse-shared-capability','Make a module-only feature usable by every project: move to engine/libraries, data blocks instead of genre modes, no compatibility headers, thin host adapters, checksum A/B','AGENTS.md'),
  ('aiverse-capability-audit','Feasibility and gap estimates from the genre status file, catalogs and module docs, not from memory','docs/capability-status.json'),
+ ('aiverse-capability-request','Prepare and submit consented, minimal missing-capability requests to AIVERSE GitHub Issues','tools/feedback/capability_request.py'),
  ('aiverse-terrain','Terrain levels, heightfield, sub-cell detail, materials and heightmaps through MCP','docs/terrain.md'),
  ('aiverse-terra-first','TerraWeave-first world capability selection for every new game; custom only for verified gaps','skills/workflow/aiverse-terra-first/SKILL.md'),
  ('aiverse-terra-vegetation','Native Arbor trees, dense grass patches, rocks, PBR and LOD authoring','skills/world/aiverse-terra-vegetation/SKILL.md'),
@@ -199,6 +200,7 @@ WORKFLOW_ALIASES={
  'aiverse-docs-upkeep':'docs readme documentation translation документац ридми перевод',
  'aiverse-shared-capability':'genre split shared capability any project module only extract move engine library adapter host compatibility header no genre mode жанр разделение общий любой проект вынести перенести модуль адаптер',
  'aiverse-capability-audit':'mechanics status what exists code audit stale механики пробелы что есть статус устарел capability audit gap gaps missing feasibility estimate limits can engine genre minecraft voxel sandbox чего не хватает оценк можно ли сделать возможност ограничен пробел жанр движок умеет',
+ 'aiverse-capability-request':'feature request missing capability feedback report engine gap github issue запрос фичи не хватает движок отправить пожелание',
  'aiverse-terrain':'terrain relief heightfield heightmap sculpt cliff detail splat рельеф высот скульпт обрыв ландшафт',
  'aiverse-terra-first':'new game create game world environment terra terraweave новый проект игра создать мир окружение терра',
  'aiverse-terra-vegetation':'terra trees grass rocks vegetation foliage arbor density lod pbr терра деревья трава камни валуны растительность лес',
@@ -250,7 +252,7 @@ WORKFLOW_ALIASES={
 PACKAGE_REF=re.compile(r'^[a-z0-9][a-z0-9-]{1,62}(@[\^~>=]*[0-9][0-9.]*)?$')
 
 def skill_packages(path):
-    """Content packages a skill needs, from its frontmatter line `packages: a, b@^1.2` (AIVERSE-PLUGINS
+    """Content packages a skill needs, from its frontmatter line `packages: a, b@^1.2` (AIVERSE-PACKAGES
     catalog ids; agents install them with tools/pkg/aiverse_pkg.py skill <id> --project P)."""
     text=(ROOT/path).read_text(encoding='utf-8')
     if not text.startswith('---\n'):return []

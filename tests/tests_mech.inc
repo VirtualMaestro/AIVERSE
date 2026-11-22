@@ -1129,7 +1129,7 @@ TEST(mech_turns) {
 }
 
 // ---------------------------------------------------------------- TB: strategic map (Total War campaign layer)
-#include "modules/strategic/Strategic.h"
+#include "engine/game/Strategic.h"
 TEST(mech_strategic) {
     Json rules = Json::parse(std::string(R"({"resources": {"gold": {}}, )") + kVic + R"(,
       "types": {"spear": {"move": {"speed": 3}, "sight": 30, "radius": 0.4, "health": {"max": 100}, "weapons": [{"range": 1, "damage": 10, "cooldown": 1}], "cost": {"gold": 20}},

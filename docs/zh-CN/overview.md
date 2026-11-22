@@ -340,7 +340,7 @@ docker build -f apps/server/Dockerfile -t aiverse-server .             # server 
 ## 音频
 
 `engine/audio` 包括混音器、由数据定义的音效库、程序化合成和音乐；输出通过 [miniaudio](../../third_party/miniaudio)（CoreAudio、
-AAudio/OpenSL ES、Web Audio、WASAPI、ALSA/PulseAudio）。`modules/rts/audio` 把模拟事件转换为声音；它不向模拟写入任何内容。没有音频设备时
+AAudio/OpenSL ES、Web Audio、WASAPI、ALSA/PulseAudio）。`engine/audio` 把模拟事件转换为声音；它不向模拟写入任何内容。没有音频设备时
 游戏静音运行；没有 `audio.json` 时游戏就是没有声音。
 
 游戏的音频就是 `game.json` 旁边的 `audio.json` 文件（也可在 game.json 中用 `"audio"` 指定其他名称）。完整格式见 `docs/game-format.md` 的

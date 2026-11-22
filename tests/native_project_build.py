@@ -13,7 +13,7 @@ with tempfile.TemporaryDirectory(prefix="rts-native-projects-") as tmp:
     # The real selection/registration code is exercised; no renderer/toolchain is needed.
     (src / "engine/game/Native.cpp").write_text("")
     (src / "stub.cpp").write_text("")
-    module_cmake = (engine / "modules/rts/native/Build.cmake").as_posix()
+    module_cmake = (engine / "engine/game/native/Build.cmake").as_posix()
     protobuf_cmake = (engine / "engine/grpc/Protobuf.cmake").as_posix()
     (src / "CMakeLists.txt").write_text(
         'cmake_minimum_required(VERSION 3.22)\nproject(NativeIsolation LANGUAGES CXX)\n'

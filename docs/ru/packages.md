@@ -2,14 +2,14 @@
 
 В репозитории движка — код и минимум ассетов. Тяжёлый дополнительный контент (библиотеки
 PBR-материалов, их исходники, шаблоны проектов, наборы моделей, звук, эффекты) лежит в каталоге
-пакетов [AIVERSE-PLUGINS](https://github.com/chromealex/AIVERSE-PLUGINS). Проект скачивает только
+пакетов [AIVERSE-PACKAGES](https://github.com/chromealex/AIVERSE-PACKAGES). Проект скачивает только
 то, что использует.
 
 | Что | Где |
 |---|---|
-| Каталог: пакеты по разделам (`materials/`, `textures/`, `templates/`, `models/`, `audio/`, `vfx/`, `ui/`, `scripts/`, `plugins/`, `tools/`) | AIVERSE-PLUGINS, `<раздел>/<id>/aiverse.package.json` |
-| Архивы `<id>-<версия>.zip` | GitHub-релизы `<id>@<версия>` репозитория AIVERSE-PLUGINS |
-| Индекс (его читают движок и сайт) | `index.json` в его `main`, пишет workflow `publish` |
+| Каталог: пакеты по разделам (`materials/`, `textures/`, `templates/`, `models/`, `audio/`, `vfx/`, `ui/`, `scripts/`, `plugins/`, `tools/`) | AIVERSE-PACKAGES, `<раздел>/<id>/aiverse.package.json` |
+| Архивы `<id>-<версия>.zip` | GitHub-релизы `<id>@<версия>` репозитория AIVERSE-PACKAGES |
+| Индекс | `index.json` в его `main`: `{id, category, path}` каждого пакета; в папке пакета — `aiverse.package.json` и `versions.json` (его пишет workflow `publish`) |
 | Клиент | `tools/pkg/aiverse_pkg.py` (Python, только стандартная библиотека; `--json` у всех команд) |
 | Кэш на компьютере | `~/.aiverse/packages/<id>/<версия>/` (`AIVERSE_PACKAGES_HOME`), скачанное проверяется по SHA-256 |
 | Сайт | страница **Каталог** (`catalog.html`): превью, описание, минимальная версия движка, скачивание |
@@ -39,11 +39,18 @@ python3 tools/pkg/aiverse_pkg.py create <id-шаблона> ~/Games/New   # но
   инструменты вызывают `aiverse_pkg.package_dir('<id>')` и получают папку в кэше (скачивается один раз).
 - Пакеты **`template`** — целые папки проектов: `create` копирует такой пакет и ставит пакеты из его
   `game.json`.
+- **Зависимости**: `add` сначала ставит content-пакеты, от которых зависит пакет (набор моделей
+  использует текстуры `terrain-pbr` / `vegetation-pbr` по относительному пути, без копий).
 - Диапазоны версий: точная `1.2.3`, `^1.2` (та же старшая), `~1.2.3` (та же средняя), `>=1.0.0`, `*`.
   У каждого пакета есть `minEngine`; `add` предупреждает, если этот checkout движка старше.
 - Без сети: `AIVERSE_PACKAGES_OFFLINE=1` берёт только кэш и последний скачанный индекс.
 - C++-инструменты и редактор находят пакеты в кэше через `engine/pack/Packages.h`
   (`aiverse::pack::cachedPackageDir("vegetation-pbr")`). Игра кэш не читает.
+- Редактор: окно Studio **Catalog** (рабочие пространства Look и Publish или «Catalog» в поиске
+  команд) ищет в каталоге, показывает пакет и ставит или удаляет его одной кнопкой; предупреждает, если
+  у пакетов проекта пропали или изменились файлы, и восстанавливает их из `aiverse.lock`. Агенты делают то
+  же через MCP: `package_search`, `package_info`, `package_status`, `package_add`, `package_remove`,
+  `package_install`, `package_skill` (они запускают `aiverse_pkg.py` на открытом проекте).
 
 ## Web-просмотрщик
 
@@ -103,11 +110,60 @@ packages: vegetation-pbr, terrain-pbr
 Агенты: прежде чем выполнять такой навык в проекте, поставьте его пакеты; файлы пакетов в репозиторий
 движка не копируются.
 
-## Добавить или обновить пакет
+## Как добавить свой пакет в каталог
 
-Pull request в AIVERSE-PLUGINS (его `CONTRIBUTING.md`); владелец проверяет и принимает. CI проверяет
-манифест, превью, лицензию и содержимое; после слияния `publish` выпускает версию и обновляет
-`index.json`, который движок и сайт читают напрямую. Маленькое содержимое лежит в `files/` пакета,
-большое — `archive` по https или `source` (папка публичного GitHub-репозитория на зафиксированном
-коммите). Опубликованная версия не меняется: для изменений нужна новая `version`. Тяжёлые ассеты
-в репозиторий движка больше не коммитятся.
+Предложить пакет может любой; каждый pull request проверяет владелец. Нужно: содержимое, которое
+можно распространять под свободной лицензией (MIT, BSD-2/3, Apache-2.0, Zlib, CC0, CC-BY-4.0, OFL-1.1),
+превью (настоящий кадр движка или сам ассет) и аккаунт на GitHub.
+
+1. **Форкните** [AIVERSE-PACKAGES](https://github.com/chromealex/AIVERSE-PACKAGES) и создайте папку
+   `<раздел>/<id>/`. Раздел — один из `templates`, `materials`, `textures`, `models`, `audio`, `vfx`, `ui`,
+   `scripts`, `plugins`, `tools`; id — строчные латинские буквы, цифры и `-`, уникальный в каталоге.
+2. **Напишите `aiverse.package.json`.** Тексты — на английском; переводы необязательны, это поля
+   `<ключ>-<язык>` (`ru`, `zh-CN`, `ja`, `ko`, `es`, `pt-BR`, `de`, `fr`):
+
+   ```json
+   {
+     "schema": 2,
+     "id": "my-rocks",
+     "version": "1.0.0",
+     "kind": "content",
+     "category": "models",
+     "title": "Desert rocks",
+     "title-ru": "Камни пустыни",
+     "summary": "Eight sandstone rocks with three LODs each.",
+     "summary-ru": "Восемь песчаниковых камней, по три LOD.",
+     "license": "CC0-1.0",
+     "minEngine": "3.1.0",
+     "authors": ["Your Name"],
+     "tags": ["rocks", "desert"],
+     "dependencies": {"terrain-pbr": "^1.0"},
+     "install": {"mount": "models/my-rocks"},
+     "viewer": {"kind": "models", "items": [{"model": "rock-0.gltf", "title": "Rock 1", "title-ru": "Камень 1"}]}
+   }
+   ```
+
+   `kind`: `content` копируется в проект в папку `install.mount`, `template` — целый проект, `source`
+   остаётся в кэше для инструментов. Все поля — в `docs/manifest.md` каталога.
+3. **Добавьте `README.md`** (что это, как пользоваться, лицензия и происхождение) и хотя бы одно
+   `preview.jpg` (ширина 640..2400 px, до 1 МБ, не больше 6 превью).
+4. **Положите содержимое** в `files/` в том виде, в каком оно окажется в `install.mount`, — до 2 ГБ.
+   Git принимает файлы до 100 МБ; для файла больше запустите
+   `python3 tools/catalog.py upload <id> --repo <вы>/AIVERSE-PACKAGES` (соберёт `files/` в архив релиза вашего
+   форка и впишет `"archive"` в манифест) и уберите `files/` из pull request. Текстуры, которые уже есть в
+   другом пакете, не копируйте: укажите его в `dependencies` и ссылайтесь на его файлы относительным путём
+   от своей папки (`../../../materials/terrain/textures/…`); `aiverse_pkg.py add` сначала ставит зависимости.
+5. **Проверьте:** `python3 tools/catalog.py check` — 0 ошибок. В проекте можно проверить, скопировав
+   `files/` в папку `install.mount` тестового проекта и открыв его в редакторе.
+6. **Откройте pull request.** CI повторит проверку. Владелец принимает его меткой `accept`, а не кнопкой
+   Merge: файлы становятся архивом релиза `<id>@<версия>`, пакет попадает в `main` без них (в манифест
+   вписывается `"archive"`), поэтому загруженные файлы в историю репозитория не входят. `versions.json`,
+   строка в `index.json`, карточка на сайте и 3D-просмотр появятся через несколько минут.
+
+Обновление: измените файлы, **увеличьте `version`** и откройте pull request. Опубликованная версия
+не заменяется (проекты фиксируют хеш архива в `aiverse.lock`).
+
+Как устроено хранение: `index.json` в корне каталога перечисляет только `{id, category, path}` каждого
+пакета (и названия разделов); в папке пакета лежат `aiverse.package.json` (пишет автор) и
+`versions.json` (пишет `publish`: версии, ссылки на архивы и SHA-256, превью, адрес 3D-просмотра).
+Тяжёлые ассеты в репозиторий движка больше не коммитятся.

@@ -1596,7 +1596,7 @@ levelUps, levelDowns, maxLevel, modeScore) и `abilityUses` по каждой с
 
 ### Стратегическая карта (кампания Total War, Company of Heroes 3, Empire at War)
 
-`modules/strategic/Strategic.h`: провинции и армии поверх `rules.json` игры; сражения рассчитываются автоматически
+`engine/game/Strategic.h`: провинции и армии поверх `rules.json` игры; сражения рассчитываются автоматически
 (квадратичный закон Ланчестера по здоровью x урону в секунду) или симулируются на RTS-симуляции с ботами, а выжившие возвращаются на карту.
 
 ```json

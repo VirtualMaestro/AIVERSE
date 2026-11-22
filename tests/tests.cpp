@@ -916,7 +916,7 @@ TEST(pack_sample_games_match_folder) {
     }
 }
 
-// ---------------- Audio (engine/audio, modules/rts/audio) ----------------
+// ---------------- Audio (engine/audio, engine/audio) ----------------
 #include <cmath>
 #include <fstream>
 #include <map>
@@ -3359,7 +3359,7 @@ TEST(audiopack_stage_game_folder) {
     fs::remove_all(root, cleanup);   // never throws: a locked temp file on Windows must not abort the run
 }
 
-// ---------------- particles (engine/fx, modules/rts/fx) ----------------
+// ---------------- particles (engine/fx, engine/fx) ----------------
 #include <cstdlib>
 #include "engine/fx/ParticleSystem.h"
 #include "engine/fx/FxModelMesh.h"

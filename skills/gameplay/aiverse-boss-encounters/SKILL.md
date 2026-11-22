@@ -10,7 +10,7 @@ hunting mobs, whatever the camera or game type. Projects on the data-driven simu
 `encounters` (docs/encounters.md, `templates/boss_arena`) runs these policies on real units (bosses, mobs,
 telegraphs as unit abilities, rules statuses, schedule, Lua events, decals); the steps below are for native/host
 owners and for planning the same mechanics as data. The rules block currently runs only on the legacy
-`modules/rts` host (debt G3 in `docs/no-genre-split-audit.md`).
+`engine/game` host.
 
 1. Read `docs/mechanics-packages.md` (boss-encounters section) and the catalog entry; inspect
    `engine/mechanics/{Telegraphs,StatusEffects,BossEncounter,BossSchedule,MobBehaviour}.h`.

@@ -6,7 +6,7 @@ description: Reuse AIVERSE gear-tiers for tiered protective equipment in any gen
 # gear-tiers
 
 Use when a project has armor-like pieces with levels and durability (equipment slots of any kind). The legacy
-`engine/actor` host wires it from rules (`gear` at the top level or legacy `fps.gear`, docs/fps.md § Gear); the same block on other hosts is debt G4/G6
+`engine/actor` host wires it from rules (`gear` at the top level or `actor.gear`, docs/fps.md § Gear); the same block on other hosts is debt G4/G6
 in `docs/no-genre-split-audit.md`. The steps below are for native / host owners.
 
 1. Read `engine/systems/Gear.h` (namespace `aiverse::lib::systems`) and the catalog entry.

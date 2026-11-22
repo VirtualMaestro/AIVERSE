@@ -391,7 +391,7 @@ Für `wss://` (eine per HTTPS ausgelieferte Spielseite) stellen Sie einen TLS-Pr
 
 `engine/audio` ist ein Mixer, Soundbanken aus Daten, prozedurale Synthese und Musik; die Ausgabe läuft über
 [miniaudio](../../third_party/miniaudio) (CoreAudio, AAudio/OpenSL ES, Web Audio, WASAPI, ALSA/PulseAudio).
-`modules/rts/audio` macht aus Simulationsereignissen Sounds; es schreibt nichts in die Simulation. Kein Gerät — das Spiel
+`engine/audio` macht aus Simulationsereignissen Sounds; es schreibt nichts in die Simulation. Kein Gerät — das Spiel
 läuft stumm. Kein `audio.json` — das Spiel hat einfach keinen Ton.
 
 Der Ton eines Spiels ist die Datei `audio.json` neben `game.json` (ein anderer Name: `"audio"` in game.json). Das vollständige

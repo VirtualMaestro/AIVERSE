@@ -14,7 +14,6 @@ Behaviour and format: `docs/traffic.md`. Simulation: `engine/game/Traffic.*`, `e
 5. Native modules: build a net with `buildTrafficNet` (or read the engine's), signals with `trafficLight` / `trafficWalk`, pedals with `trafficDriverInput`, sidewalks with `trafficWalkRoute`; large vehicles: `trafficWideExit` (prefers carriageways of `minWidth`, first and last piece always allowed), blockages: `trafficLocalDetour` (bounded lattice, then the normal collision checks). Give cars pedals through `vehicles::setAutopilot` (engine/vehicles; grid map: `Driving::setAutopilot`), never by moving them.
 6. Checks: same seed, same checksum; maps without `traffic` keep theirs; screenshots of a junction (lights, stop lines) and of a crossing on "walk".
 
-Current host: the traffic simulation runs on the legacy `modules/rts` host only; running it elsewhere needs the
-extraction listed as debt G3 in `docs/no-genre-split-audit.md` - extract, do not reimplement.
+Host: the traffic simulation is a system of `engine/game` (GameCore, the one host for every project).
 
-Game-specific type ids or variable names never go into `modules/rts`: put them in rules data or the game's `native/`.
+Game-specific type ids or variable names never go into `engine/game`: put them in rules data or the game's `native/`.

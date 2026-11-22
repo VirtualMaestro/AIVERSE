@@ -90,7 +90,7 @@ half-extent=0.1, contact fraction inset=0.01, divisor=2) reproduces the
 pre-ECS FPS grenade bounce arithmetic exactly.
 
 The live FPS ordinary projectile stage is registered as
-`fps.ordinaryProjectiles`, after `fps.projectilePrograms` and before `fps`
+`actor.ordinaryProjectiles`, after `actor.projectilePrograms` and before `fps`
 (round / character tick). It advances the `Projectile` components of the
 projectile entities in ascending `id` order and emits the original immediate
 hit effects; the cross-genre `ecs_projectile_composition_test` compares
@@ -109,11 +109,11 @@ When implementing another mechanic, repeat the same decomposition:
 The FPS host is ECS-only (`engine/actor/ActorComponents.h`): every projectile,
 loot item and vehicle is an entity with a `Projectile` / `Loot` / `Vehicle`
 component; there is no `State::projectiles` vector, mirror stage or
-`fps.ecsAuthority` switch. Deterministic order is ascending `id`
+`actor.ecsAuthority` switch. Deterministic order is ascending `id`
 (`fps::State::nextObject`), read through `Module::projectileEntities` or the
 `Module::projectiles` copies.
 
-* `fps.projectilePrograms` (`Module::stepProgrammedProjectile` in
+* `actor.projectilePrograms` (`Module::stepProgrammedProjectile` in
   `engine/actor/ActorProjectiles.cpp`) composes the projectile modifier policy
   with `selectSweptProjectileContact`; no second physical solver. Collision,
   damage, on-hit / loot side effects and branching happen synchronously while

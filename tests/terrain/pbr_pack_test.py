@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Contract checks for the terrain-pbr catalog package (AIVERSE-PLUGINS) and the project installer.
+"""Contract checks for the terrain-pbr catalog package (AIVERSE-PACKAGES) and the project installer.
 Downloads the package into the cache when missing; with AIVERSE_PACKAGES_OFFLINE=1 and no cached
 copy it skips."""
 from pathlib import Path

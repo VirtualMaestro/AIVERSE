@@ -357,7 +357,7 @@ docker build -f apps/server/Dockerfile -t aiverse-server .             # server 
 ## 사운드
 
 `engine/audio`는 믹서, 데이터 기반 사운드 뱅크, 절차적 합성, 음악입니다. 출력은 [miniaudio](../../third_party/miniaudio)(CoreAudio,
-AAudio/OpenSL ES, Web Audio, WASAPI, ALSA/PulseAudio)를 통합니다. `modules/rts/audio`는 시뮬레이션 이벤트를 소리로 바꾸며 시뮬레이션에는
+AAudio/OpenSL ES, Web Audio, WASAPI, ALSA/PulseAudio)를 통합니다. `engine/audio`는 시뮬레이션 이벤트를 소리로 바꾸며 시뮬레이션에는
 아무것도 쓰지 않습니다. 장치가 없으면 게임은 소리 없이 돌아가고, `audio.json`이 없으면 그냥 소리 없는 게임입니다.
 
 게임의 사운드는 `game.json` 옆의 `audio.json` 파일입니다(다른 이름은 game.json의 `"audio"`). 전체 형식은 `docs/game-format.md`의

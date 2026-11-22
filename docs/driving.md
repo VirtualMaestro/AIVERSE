@@ -15,7 +15,7 @@ vehicle-controllers library (`engine/mechanics/VehicleControllers.h`, docs/mecha
   car entity disappears.
 - **Types.** `vehicles::VehicleType` (`type` = the host's id, `length` / `width` in host units, controller def,
   optional seat list) in `vehicles::DriveRules`: the rules block `driving` (`parseDriving`, grid maps) or
-  `fps.vehicleTypes` (metre maps: metres, seat lists, crash 8 m/s x 10) become the same list.
+  `actor.vehicleTypes` (metre maps: metres, seat lists, crash 8 m/s x 10) become the same list.
 - **One step** (`vehicles::stepVehicles`, ascending entity index): pedals = race session > the driver's controls
   (shared mappings, mechanics/VehicleDrive.h) > a host bot (traffic) > autopilot > parked; empty resting vehicles
   sleep; controller step; the host's sweep; crash / run-over damage (`VehicleImpacts`).

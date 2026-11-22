@@ -297,14 +297,14 @@ if(AIVERSE_BUILD_TESTS AND NOT EMSCRIPTEN)
     add_test(NAME ecs_cross_genre_mechanics_test
         COMMAND aiverse_ecs_cross_genre_mechanics_test)
 endif()
-include(modules/rts/native/Build.cmake)
+include(engine/game/native/Build.cmake)
 # agent-mech: mechanics of the top-100 strategy games plan (stances, transports, ...)
 file(GLOB AIVERSE_MECH_SOURCES CONFIGURE_DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/engine/game/Mech*.cpp)
 target_sources(aiverse_game PRIVATE ${AIVERSE_MECH_SOURCES} engine/game/Save.cpp engine/game/Campaign.cpp   # + save states, campaigns
-    modules/strategic/Strategic.cpp)   # strategic map: provinces, armies, battles on GameCore
+    engine/game/Strategic.cpp)   # strategic map: provinces, armies, battles on GameCore
 # Optional simulation systems of packaged clients (packaging.engineModules, tools/aiversebuild).
 # A system that runs only when its rules block is present can be left out: OFF compiles the adapter
-# `stub` (modules/rts/disabled/) instead of its sources; the adapter keeps the system inactive and
+# `stub` (engine/game/disabled/) instead of its sources; the adapter keeps the system inactive and
 # makes rules that need it fail with a readable error. Packaged clients only - the editor, tests,
 # headless runner, servers and HTML5 Studio always build every system.
 function(aiverse_game_module var description stub)
@@ -320,11 +320,11 @@ function(aiverse_game_module var description stub)
 endfunction()
 
 # agent-bw-ai: Bunker Wars computer player (rules ai.controller "bw")
-file(GLOB AIVERSE_BWAI_SOURCES CONFIGURE_DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/modules/rts/RtsBwAI*.cpp)
+file(GLOB AIVERSE_BWAI_SOURCES CONFIGURE_DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/engine/game/BwAI*.cpp)
 # Every game: hypnotised sends, per point counters, the controller registry and the registration point.
-target_sources(aiverse_game PRIVATE engine/game/Hypnosis.cpp engine/game/AIControllers.cpp modules/rts/RtsGameExtensions.cpp)
+target_sources(aiverse_game PRIVATE engine/game/Hypnosis.cpp engine/game/AIControllers.cpp engine/game/GameExtensions.cpp)
 aiverse_game_module(AIVERSE_GAME_WITH_BWAI "Include the Bunker Wars computer player (rules ai.controller \"bw\")"
-    modules/rts/disabled/BwAI.cpp ${AIVERSE_BWAI_SOURCES})
+    engine/game/disabled/BwAI.cpp ${AIVERSE_BWAI_SOURCES})
 
 # Localization: string tables, plurals, language choice (presentation only, no sim dependency).
 # RtsLocalize maps RTS data (types, resources, maps...) to string keys.
@@ -1264,6 +1264,21 @@ if(AIVERSE_PLATFORM MATCHES "^(windows|linux|android)$")
 endif()
 option(AIVERSE_VULKAN "Build the Vulkan RHI backend (Windows, Linux, Android)" ${_aiverse_vulkan_default})
 if(AIVERSE_VULKAN)
+    # SPIR-V optimizer (vendored SPIRV-Tools + SPIRV-Headers, third_party/spirv-tools): glslang runs the
+    # performance passes on every program. Mobile drivers (Adreno) barely optimise SPIR-V themselves:
+    # unoptimised shaders cost ~30% GPU time on a Galaxy A05s. Needs Python 3 on the build host (grammar tables).
+    option(AIVERSE_SPIRV_OPT "Optimize Vulkan SPIR-V with the vendored SPIRV-Tools" ON)
+    if(AIVERSE_SPIRV_OPT)
+        set(SPIRV-Headers_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/third_party/spirv-headers)
+        # the table generators need Python >= 3.9: take the newest interpreter, not the first on PATH
+        set(Python3_FIND_STRATEGY VERSION)
+        set(SPIRV_SKIP_EXECUTABLES ON CACHE BOOL "" FORCE)
+        set(SPIRV_SKIP_TESTS ON CACHE BOOL "" FORCE)
+        set(SPIRV_WERROR OFF CACHE BOOL "" FORCE)
+        set(SKIP_SPIRV_TOOLS_INSTALL ON CACHE BOOL "" FORCE)
+        set(SPIRV_TOOLS_BUILD_STATIC ON CACHE BOOL "" FORCE)
+        add_subdirectory(third_party/spirv-tools EXCLUDE_FROM_ALL)
+    endif()
     add_subdirectory(third_party/glslang)
     add_library(aiverse_gfx_vulkan STATIC engine/gfx/vulkan/VkApi.cpp engine/gfx/vulkan/VkShaderCompiler.cpp engine/gfx/vulkan/VkSurface.cpp
         engine/gfx/vulkan/GfxVulkan.cpp engine/gfx/vulkan/VkResources.cpp engine/gfx/vulkan/VkDraw.cpp
@@ -2449,7 +2464,7 @@ endif()
 
 # Project import (shared Python pipeline + editor/MCP bridge).
 if(TARGET aiverse_editor_core)
-    target_sources(aiverse_editor_core PRIVATE apps/editor/core/PortOps.cpp)
+    target_sources(aiverse_editor_core PRIVATE apps/editor/core/PortOps.cpp apps/editor/core/PackageOps.cpp)
 endif()
 if(AIVERSE_BUILD_TESTS AND Python3_Interpreter_FOUND)
     add_test(NAME project_importer COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/tools/importers/port/test_port.py)
@@ -3640,7 +3655,7 @@ endif()
 if(AIVERSE_BUILD_TESTS AND Python3_Interpreter_FOUND)   # UI.Windows audio bank importer (synthetic data, no game files)
     add_test(NAME uiwindows_audio_importer COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/tools/importers/fmod/test_import_audio.py)
 endif()
-# The project's native modules (<content>/native, modules/rts/native/Build.cmake) after every engine target, so a
+# The project's native modules (<content>/native, engine/game/native/Build.cmake) after every engine target, so a
 # module's CMake may link aiverse_net / aiverse_grpc / aiverse_plugins / server libraries and call
 # aiverse_protobuf_generate (docs/native-modules.md § Engine libraries); before the Windows manifest pass below.
 aiverse_native_configure()

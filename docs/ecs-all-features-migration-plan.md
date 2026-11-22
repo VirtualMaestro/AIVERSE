@@ -8,7 +8,7 @@ Goal: **every authoritative gameplay feature is an opt-in composition of reusabl
 
 ### Present state, grounded in source
 - `engine/game/GameCore.cpp` registers 41 named ordered system stages, but module-aware systems still use `GameCore&`, `GameState` and `Unit`, with a large `applyCommand` dispatcher.
-- `engine/actor/ActorModule.cpp` stages `fps.ecsHydrate -> fps -> fps.ecsMirror` when `fps.ecsAuthority` is on, with `ActorRuntime`, `ProjectileRuntime`, `LootRuntime` and `VehicleRuntime` storage. The `fps` tick itself still runs many algorithms through `State::actors` and dynamic vectors; legacy saves are v9.
+- `engine/actor/ActorModule.cpp` stages `actor.ecsHydrate -> fps -> fps.ecsMirror` when `actor.ecsAuthority` is on, with `ActorRuntime`, `ProjectileRuntime`, `LootRuntime` and `VehicleRuntime` storage. The `fps` tick itself still runs many algorithms through `State::actors` and dynamic vectors; legacy saves are v9.
 - Generic public components/systems exist in three opt-in packages: `ecs-weapon-launch`, `ecs-projectile-systems`, `ecs-impact-damage`. These have not replaced real FPS/RTS gameplay. Native test success is **unverified**.
 - `engine/core/ECS.h` supports deterministic sparse-set World and experimental COW; `engine/sim/CommonComponents.h` has `Transform`, `Owner`, `Parent`, `LocalTransform`, `WorldTransform`. ECS is the substrate, not evidence that a module is fully universal.
 - In-match `GameCore` and `fps::Module` must become composition/adapters. `modules/rts` and `modules/fps` remain for template compatibility until snapshots/replays/network pass.
@@ -238,7 +238,7 @@ tests before switching source ownership or system barriers.
   knockdown, kill credit, loot and event ordering are preserved by calling
   the shared helper at the prior immediate HP commit point. This is
   **shared-policy adoption**, not separate FPS `HitPointsComponent`
-  authority: `ActorRuntime` remains canonical in `fps.ecsAuthority`.
+  authority: `ActorRuntime` remains canonical in `actor.ecsAuthority`.
 - The generic `DamageQueue` now provides explicit v1 endian-independent
   `saveDamageQueue` / transactional `loadDamageQueue` /
   `hashDamageQueue` helpers with size bounds and generation-safe Entity
@@ -266,7 +266,7 @@ fps.ecsMirror               [editor projection and ECS canonical commit]
 ```
 
 The previously first statement of `Module::tick`, `tickProjectilePrograms`,
-was moved into `fps.compat.projectilePrograms`, with the same winner guard.
+was moved into `actor.compat.projectilePrograms`, with the same winner guard.
 This is an independently named `Simulation` stage and a **real extraction
 from the monolithic game loop**, but it still uses legacy `State::projectiles`
 and `State::actors` as compatibility workspaces. In ECS-authority mode
@@ -299,8 +299,8 @@ and editor integration tests pass natively.
 
 ## FPS direct ProjectileRuntime flight ownership checkpoint (2026-11-18)
 
-The live `fps.compat.projectilePrograms` stage has now been updated on the
-`fps.ecsAuthority=true` path: the **simulation of programmed projectile
+The live `actor.compat.projectilePrograms` stage has now been updated on the
+`actor.ecsAuthority=true` path: the **simulation of programmed projectile
 flight, collision, immediate impact and branch spawn mutates the canonical
 `ProjectileRuntime` ECS component**, not `State::projectiles`.
 Original source order is restored from the `ProjectileRuntime.order` plus
@@ -324,7 +324,7 @@ stage; these existing consumers can still modify the vector, which is
 mirrored back into ECS at the end-of-tick barrier. Full exclusive
 `ProjectileRuntime` authority for all FPS projectile operations requires
 converting these remaining consumers and spawn paths next. Do not remove
-`fps.ecsHydrate`/`fps.ecsMirror` until that work, v9 binary save
+`actor.ecsHydrate`/`actor.ecsMirror` until that work, v9 binary save
 compatibility, network prediction, replay and Editor tests all pass.
 
 **Verification source:** `tests/fps/projectiles.inc` adds live FPS
@@ -339,7 +339,7 @@ save v9 between legacy and ECS storage configurations.
 **Not yet verified:** native compilation/execution of this branch and
 all assertions, load/replay across networking, performance and editor
 regression. The code stays behind existing default-OFF
-`fps.ecsAuthority`. Next wave is to convert remaining nonprogrammed
+`actor.ecsAuthority`. Next wave is to convert remaining nonprogrammed
 grenade/mode updates and direct in-tick spawns before making the entire
 frame ECS-only.
 
@@ -350,7 +350,7 @@ Following the direct `ProjectileRuntime` flight-stage migration, both
 **actual accepted FPS weapon projectiles** (`Module::shoot`) and
 **actual Frag, Smoke and Flash throwable actions** (`Module::action`)
 now call one `Module::spawnProjectile(Simulation&,Projectile)`. On the
-`fps.ecsAuthority` path, that helper creates a canonical live ECS
+`actor.ecsAuthority` path, that helper creates a canonical live ECS
 `ProjectileRuntime` Entity immediately at the *source action*, with
 source ID, stable `order`, `DynamicEntityIndex` mapping and Editor
 `ProjectileEntity` projection, before synchronizing the same-tick
@@ -362,7 +362,7 @@ The **bomb-round reset** `Module::tickSystems` now invokes
 `ProjectileRuntime` entities in source-ID order and clears projectile
 index keys at the reset barrier (while preserving loot/vehicle keys);
 the legacy/default mode retains the original vector clear. The ECS
-stage is no longer waiting for the final `fps.ecsMirror` to materialize
+stage is no longer waiting for the final `actor.ecsMirror` to materialize
 new weapon/grenade projectiles or retire projectile entities on reset.
 
 **Remaining transitional constraint:** other FPS systems still read and
@@ -387,14 +387,14 @@ snapshot replay. Source tests have been written and registered, but
 **Follow-up:** finish converting all secondary projectile State writers
 and readers, including smoke/cloud visibility and other round-mode
 consumers, to ECS components and structured read projections; then
-retire `fps.ecsMirror` as a writeback source for projectiles. Carry
+retire `actor.ecsMirror` as a writeback source for projectiles. Carry
 through native compiler/CTest, FPS networking, Editor lifecycle and RTS
 shared-mechanics integration before any default enablement.
 
 
 ## FPS projectile end-of-tick one-way ECS mirror (2026-11-18)
 
-The live `fps.ecsMirror` in `engine/actor/ActorModule.cpp` now calls
+The live `actor.ecsMirror` in `engine/actor/ActorModule.cpp` now calls
 `syncDynamicEntities(sim,config_.ecsAuthority)` instead of always
 importing `State::projectiles` into `ProjectileRuntime`.
 
@@ -414,7 +414,7 @@ importing `State::projectiles` into `ProjectileRuntime`.
   ECS → State direction applies only during the live mirror barrier.
 
 All known built-in FPS projectile **producers and mutators** have now
-been routed to ECS when `fps.ecsAuthority` is enabled: accepted weapon
+been routed to ECS when `actor.ecsAuthority` is enabled: accepted weapon
 shots, Frag/Smoke/Flash actions, programmed flight, ordinary ballistic
 bullets/grenade bounce/smoke expiry, and bomb-round projectile cleanup.
 The one shared physical solver and synchronous impact/damage ordering

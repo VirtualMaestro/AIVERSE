@@ -1127,6 +1127,7 @@ namespace aiverse::gfx {
 
 std::unique_ptr<Device> createVulkanDevice(const VulkanWindow& window, std::string* error) {
     auto d = std::make_unique<vk::VulkanDevice>();
+    if (!window.shaderCacheDir.empty()) vk::setShaderCacheDir(window.shaderCacheDir);
     std::string err;
     if (!d->init(window, err)) { if (error) *error = err; return nullptr; }
     return d;

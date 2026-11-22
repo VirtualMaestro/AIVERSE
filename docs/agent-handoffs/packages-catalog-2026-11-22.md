@@ -1,10 +1,10 @@
-# Package catalog (AIVERSE-PLUGINS) — handoff 2026-11-22
+# Package catalog (AIVERSE-PACKAGES) — handoff 2026-11-22
 
 Branch `feature/aiv20261122_packages` (from GitHub main bb3d910). Implementation commit 63914f7.
 
 ## What exists
 
-- Catalog repository https://github.com/chromealex/AIVERSE-PLUGINS (public):
+- Catalog repository https://github.com/chromealex/AIVERSE-PACKAGES (public):
   `<category>/<id>/aiverse.package.json` + README + previews; `tools/catalog.py`
   (check / pack / archive / publish / index), `tools/test_catalog.py`, workflows `check`
   (PRs) and `publish` (main: releases `<id>@<version>` + `index.json` commit), CODEOWNERS,
@@ -75,7 +75,7 @@ that is fine: published versions are never rebuilt.
 
 ## Stage 3 (2026-11-22): viewer shapes, LOD / STRATA, textures as published, animated loading mark
 
-Branch `feature/aiv20261122_packages` (main merged in first). Catalog repo `chromealex/AIVERSE-PLUGINS` main.
+Branch `feature/aiv20261122_packages` (main merged in first). Catalog repo `chromealex/AIVERSE-PACKAGES` main.
 
 What changed:
 - `apps/catalogview/main.cpp`: material shapes (sphere / cube / cylinder / plane, `cv_shape`), own UV
@@ -110,6 +110,50 @@ Web: after the catalog `pages` run the deployed viewer was opened in a browser
 loading mark). NOT RUN: LOD/STRATA in the web build (no model package in the catalog yet), the web game shell with the new default mark, Studio in the
 native app. No model packages exist in the catalog yet, so LOD/STRATA show up on the site only with one.
 
-Next: after the merge, set `ENGINE_REF` in AIVERSE-PLUGINS `pages.yml` to `main`; a first model
+Next: after the merge, set `ENGINE_REF` in AIVERSE-PACKAGES `pages.yml` to `main`; a first model
 package (with authored or generated LODs) to exercise LOD/STRATA on the site; cooked STRATA archives
 for large models (staging is synchronous).
+
+## Stage 4 — model packs, dependencies, catalog format 2 (2026-11-22, branch feature/aiv20261122_model_packages)
+
+- The catalog repository was renamed to **AIVERSE-PACKAGES** (owner, 2026-11-22). Every reference in the
+  engine and the catalog now uses the new name; GitHub redirects git and release downloads from the old one.
+- **Catalog format 2** (owner): texts are English in the plain key (`title`, `summary`, `description`,
+  viewer item `title`), translations are `<key>-<lang>` with lang `ru`, `zh-CN`, `ja`, `ko`, `es`, `pt-BR`,
+  `de`, `fr`. Root `index.json` (schema 2) lists only categories and `{id, category, path}`; the package
+  folder has `aiverse.package.json` (author) and `versions.json` (publish: versions, URLs, SHA-256,
+  previews, readme, viewer URL). Published archives keep their old inner manifests (not used for texts).
+- `tools/pkg/aiverse_pkg.py`: `INDEX_SCHEMA = 2`, `package_entry()` reads the two package files (cached
+  per package for offline use); `add` installs content dependencies first (cycle check), result lists them.
+  Test covers a model pack depending on a material pack.
+- Site Catalog page reads the new layout; section "Add your package" with five steps links to the full
+  guide in `docs/packages.md` § Adding your package (ru: § Как добавить свой пакет).
+- Catalog viewer shell: item titles `title-<lang>` by the page language.
+- Catalog repo: `tools/catalog.py` (format 2, dependency-aware `build_view`, model sidecars),
+  `publish.yml` commits `*/*/versions.json`, README in nine languages, new packages
+  `models/terraweave-rocks` (12 rocks, 4 MB) and `models/terraweave-trees` (10 species, 17 MB), made with
+  `aiverse_terraweave_rocks --seed 42 --count 12` and `aiverse_terraweave_vegetation --catalog botanical
+  --variants 1 --seed 42`; their glTF images point to `../../../materials/{terrain,vegetation}/textures/`.
+- Checked: catalog check + self-test, aiverse_pkg test, skills catalog/audit, site check/build, the site
+  catalog page against a local copy of the catalog in Chrome, native viewer frames of rocks/trees with
+  dependency textures (Linux GL) incl. STRATA on the oak. Not checked yet: the live pages after publish.
+- Payload without history (owner, 2026-11-22): a package PR carries `files/` up to 2 GB (git: files up
+  to 100 MB; bigger single files via `tools/catalog.py upload <id> --repo <fork>`). The owner accepts with
+  the label `accept` (workflow `accept.yml`, `pull_request_target`, PR checkout read as data only): the
+  files become the release archive and the package is committed to main without them, manifest gets
+  `archive`. The `merge-guard` check job fails on PRs with `files/` so nobody presses Merge. The PR head
+  ref on GitHub still holds the files (GitHub keeps `refs/pull/N/head`); clones of main never fetch it.
+
+## Stage 5 — Studio Catalog window and package_* MCP ops (2026-11-22, branch feature/aiv20261122_catalog_studio)
+
+- `apps/editor/core/PackageOps.{h,cpp}`: `package_search/info/status/add/remove/install/skill` over
+  `aiverse_pkg.py --json` (shared by MCP and Studio). Checked through the built `aiversemcp` on Linux
+  against the live catalog: search, info, and `package_add terraweave-rocks` into a temp project, which
+  installed `terrain-pbr` first (130 + 26 files, game.json and aiverse.lock written).
+- Studio panel `catalog` (handoff `docs/handoff/studio-html5/stage-101-catalog-window.md`), native allowlist
+  group `catalog` in `apps/studio-native/StudioTools.h`.
+- Viewer shell: texture names without the loader's `#tN` suffix.
+- Live check after publishing: site Catalog lists 6 packages; tree pack 3D preview on Pages shows LOD
+  levels and STRATA (oak: 109 clusters, 68 ms) with textures taken from vegetation-pbr.
+- Not checked: native macOS Studio panel; STRATA wireframe overlay looked empty on the oak in the web build
+  (cluster colours not tried there).

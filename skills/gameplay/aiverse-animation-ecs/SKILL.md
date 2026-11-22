@@ -84,7 +84,7 @@ See `docs/agent-handoffs/animation-universal.md` for commits and blockers.
   graphs with native/Lua traits or contact environment fall back to serial.
   `AnimationHotReload.h` provides transactional compile/poll/apply.
 - `AnimationCrowdSystems.h` outputs GPU `BakedSample` for uncomplicated
-  Idle/Walk/Run/Death clips; `fps.visual.bakedCrowd=true` enables the
+  Idle/Walk/Run/Death clips; `actor.visual.bakedCrowd=true` enables the
   optional FPS path. Complex rigs stay on palette skinning.
 - `AnimationEventDispatch.h` collects Graph Clip and Montage cues
   into a bounded cosmetic event stream; gameplay hit/damage/reload remains

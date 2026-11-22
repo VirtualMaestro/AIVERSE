@@ -1206,8 +1206,10 @@ vertex VOut vs_main(VIn in [[stage_in]], constant U0& u [[buffer(1)]], constant 
 )";
 
 // ---------------- colored lines / flat triangles (overlays, no lighting) ----------------
+// Only the frame block: a std140 block is active even when unused, and WebGL refuses a draw whose
+// declared U0 is larger than the buffer bound there (lines and overlay triangles were dropped).
 inline const char* kColorVS =
-    AIVERSE_GLSL_BLOCKS
+    AIVERSE_GLSL_FRAME
     R"(
 layout(location = 0) in vec3 a_pos;
 layout(location = 1) in vec4 a_col;

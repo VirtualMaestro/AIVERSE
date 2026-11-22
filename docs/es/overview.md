@@ -392,7 +392,7 @@ Para `wss://` (una página de juego servida por HTTPS), pon un proxy TLS (nginx,
 
 `engine/audio` es un mezclador, bancos de sonidos a partir de datos, síntesis procedural y música; la salida va por
 [miniaudio](../../third_party/miniaudio) (CoreAudio, AAudio/OpenSL ES, Web Audio, WASAPI, ALSA/PulseAudio).
-`modules/rts/audio` convierte eventos de la simulación en sonidos; no escribe nada en la simulación. Sin dispositivo, el juego
+`engine/audio` convierte eventos de la simulación en sonidos; no escribe nada en la simulación. Sin dispositivo, el juego
 funciona en silencio. Sin `audio.json`, el juego simplemente no tiene sonido.
 
 El sonido de un juego es el archivo `audio.json` junto a `game.json` (otro nombre: `"audio"` en game.json). El formato

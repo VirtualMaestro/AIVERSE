@@ -54,6 +54,6 @@ native OBJECT modules call `aiverse_native_use_libraries(target vehicle-controll
 Engine projects use it through the one vehicle system `engine/vehicles` (`AIVERSE::vehicles`, docs/driving.md):
 components `vehicles::VehicleDrive` / `VehicleOccupant`, `vehicles::stepVehicles` (the per-tick order above, with the
 host's `VehicleHost` world query) and the race adapter `vehicles::VehicleRace`. Rules `driving` (grid maps,
-`skills/gameplay/aiverse-driving`) and `vehicleTypes` (top level, or legacy `fps.vehicleTypes`) + map vehicles with
+`skills/gameplay/aiverse-driving`) and `vehicleTypes` (top level, or legacy `actor.vehicleTypes`) + map vehicles with
 `"type"` (metre maps, `engine/actor/ActorVehicles.cpp`, docs/fps.md § Typed vehicles, test `typedVehicles` in
 `tests/fps/tests.cpp`) both become `vehicles::VehicleType`s. Extend the shared system, never add a host-side copy.

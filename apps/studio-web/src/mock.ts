@@ -140,6 +140,7 @@ export async function mockInvoke(method: StudioMethod, params: StudioParams[Stud
   if (method === 'studio.hub') return { recent: [], templates: [{ id: 'empty', name: 'Empty', description: '', genre: '', maps: 1 }], defaultLocation: '~/AiverseProjects' } as StudioResult['studio.hub'];
   if (method === 'studio.hubOpen' || method === 'studio.hubCreate') throw new Error('Open the native Studio');
   if (method === 'studio.ops') return { panel: String((params as { panel?: string })?.panel ?? ''), ops: [] } as StudioResult['studio.ops'];
+  if (method === 'studio.op' && String((params as { op?: string })?.op ?? '').startsWith('package_')) return mockPackageOp(params as StudioParams['studio.op']) as StudioResult['studio.op'];
   if (method === 'studio.op' || method === 'studio.inputGet' || method === 'studio.inputSet' || method === 'studio.assetAudit' ||
     method === 'studio.agentInfo' || method === 'studio.sceneBrush' || method === 'studio.splineEdit' || method === 'studio.stats' || method === 'studio.gpuStats' || method === 'studio.keepPlayChanges' || method === 'studio.extensions' || method === 'studio.extensionAction' || method === 'studio.extensionCreate' || method === 'studio.attachmentsGet' || method === 'studio.attachmentsSet' || method === 'studio.agentStart' || method === 'studio.agentStop' || method === 'studio.agentReset')
     throw new Error('Open the native Studio');
@@ -214,4 +215,22 @@ export async function mockInvoke(method: StudioMethod, params: StudioParams[Stud
   const result = clone();
   if (result.selectedId) result.inspector = demoInspector(result.selectedId);
   return result;
+}
+
+/** Browser demo of the Catalog panel: two catalog packages, one installed (the native Studio runs aiverse_pkg.py). */
+function mockPackageOp({ op, params }: StudioParams['studio.op']): StudioResult['studio.op'] {
+  const packs = [
+    { id: 'terraweave-trees', kind: 'content', category: 'models', title: 'TerraWeave trees', latest: '1.0.0', size: 8504568, cached: false,
+      summary: 'Ten tree species from the TerraWeave Arbor generator, three LODs each.', license: 'MIT', minEngine: '3.1.0',
+      install: { mount: 'models/terraweave/trees' }, dependencies: { 'vegetation-pbr': '^1.0' }, versions: { '1.0.0': { size: 8504568 } } },
+    { id: 'terrain-pbr', kind: 'content', category: 'materials', title: 'Terrain PBR materials', latest: '1.0.0', size: 82512081, cached: true,
+      summary: '14 seamless 1024² terrain PBR materials.', license: 'MIT', minEngine: '2.2.0',
+      install: { mount: 'materials/terrain' }, versions: { '1.0.0': { size: 82512081 } } },
+  ];
+  let result: unknown;
+  if (op === 'package_search') result = packs.filter(p => !params.category || p.category === params.category);
+  else if (op === 'package_info') result = packs.find(p => p.id === params.id);
+  else if (op === 'package_status') result = { packages: [{ id: 'terrain-pbr', wanted: '^1.0.0', locked: '1.0.0', files: 130, missing: 0, changed: 0 }], mismatch: 0 };
+  else throw new Error('Open the native Studio to install packages');
+  return { op, result, changed: false };
 }

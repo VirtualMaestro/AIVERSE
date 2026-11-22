@@ -9,7 +9,7 @@ A race is a capability of any project with cars, never a genre mode. Format and 
 Simulation: `engine/mechanics/RaceSession.h` (data: `mechanics/RaceSessionData.h`; dynamics and the race
 bot: `skills/gameplay/aiverse-vehicle-controllers`). Presentation: `engine/ui/RaceHud.h`, `engine/render/CameraBehavior.h`.
 
-1. The project needs cars its host already steps: typed map vehicles (`fps.vehicleTypes` + map `vehicles` with
+1. The project needs cars its host already steps: typed map vehicles (`actor.vehicleTypes` + map `vehicles` with
    `"type"`) on a metre map, or rules `driving` vehicles on a grid map. Racer `i` = the `i`-th car = player `i + 1`.
 2. Map `"race"` in the map's own units: `checkpoints` in driving order (`x`, `z`, `yaw` = direction of travel in
    turns, `width`; the last one is the finish), optional `grid` (one slot per racer), `line` (closed racing line;

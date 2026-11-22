@@ -39,7 +39,7 @@ def png(path,a):
     Image.fromarray(np.rint(np.clip(a,0,1)*255).astype('uint8')).save(path,optimize=True)
 
 def catalog_package(pid):
-    """Folder of an AIVERSE-PLUGINS catalog package in the shared cache (downloaded when missing)."""
+    """Folder of an AIVERSE-PACKAGES catalog package in the shared cache (downloaded when missing)."""
     import sys as _sys
     _sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'pkg'))
     from aiverse_pkg import package_dir

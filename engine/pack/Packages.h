@@ -1,4 +1,4 @@
-// Catalog packages (AIVERSE-PLUGINS) on this machine: where tools/pkg/aiverse_pkg.py keeps them.
+// Catalog packages (AIVERSE-PACKAGES) on this machine: where tools/pkg/aiverse_pkg.py keeps them.
 //
 // Host tools and the editor only (it reads the user's home folder); a game never reads the cache:
 // packages are installed into the project (aiverse_pkg.py add) and ship inside its content pack.

@@ -16,13 +16,13 @@
     "Models: Auto LOD (the level the renderer picked at this distance is highlighted), any level by hand, or STRATA — clusters are built from the model on first request and the Clusters button colours them. Wireframe shows the edges of the shown level. The panel lists triangles per level, whether the engine generated the LODs, and STRATA's cluster count and build time.",
     "The loading mark is the same assembly of blades and diamond as the engine's splash: on the site (catalog, builds on the releases page), in the viewer, in Studio instead of spinners, and in web builds of games without their own splash."
   ],
-  "status": "in-progress",
+  "status": "done",
   "verified": "Кадры сняты в настольной сборке просмотрщика (Linux, OpenGL) на пакетах terrain-pbr и vegetation-pbr и на тестовом камне в 20 тыс. треугольников; знак загрузки снят на собранном сайте в Chrome.",
   "verifiedEn": "Frames come from the desktop build of the viewer (Linux, OpenGL) on the terrain-pbr and vegetation-pbr packages and a 20k-triangle test rock; the loading mark was captured on the built site in Chrome.",
   "limits": "Веб-версия просмотрщика собирается в каталоге и проверяется после выкладки. В каталоге пока нет пакетов с моделями, поэтому LOD и STRATA на сайте появятся с первым таким пакетом. STRATA собирается при первом выборе, на крупной модели это заметная пауза.",
   "limitsEn": "The web viewer is built in the catalog and checked after it is deployed. The catalog has no model packages yet, so LOD and STRATA appear on the site with the first one. STRATA is built on first request, which is a noticeable pause on a large model.",
   "branch": "feature/aiv20261122_packages",
-  "commit": null,
+  "commit": "a304cd753",
   "media": [
     {
       "src": "docs/devlog/media/2026-11-22-build-catalog-viewer-lod/01.jpg",

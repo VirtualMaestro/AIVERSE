@@ -52,7 +52,7 @@ seat a player or a bot, the racer's own pedals, ask for a respawn, sync its pose
 
 | Host | Cars | Race seats |
 |---|---|---|
-| Metre maps with box colliders (`modules/fps`) | typed map vehicles (`fps.vehicleTypes`), ascending vehicle id | `fps::RaceSeats` in `engine/actor/ActorVehicles.cpp`; starts at setup |
+| Metre maps with box colliders (`modules/fps`) | typed map vehicles (`actor.vehicleTypes`), ascending vehicle id | `fps::RaceSeats` in `engine/actor/ActorVehicles.cpp`; starts at setup |
 | Grid maps with heroes (`modules/rts`) | vehicles of rules `driving`, entity order | `Driving::Seats` in `engine/game/Driving.cpp`; starts on the first tick |
 
 Racers cannot get out while the race runs (`VehicleRace::holds`); crash damage to racers follows rules

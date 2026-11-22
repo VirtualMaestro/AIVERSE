@@ -214,7 +214,7 @@ conversion tools retain BLP support.
 Declare `city-client` if the game uses the `AIVERSE_CITY` server connection.
 With the module excluded, setting `AIVERSE_CITY` produces an error when a match starts.
 Declare the simulation systems the data uses (or use `auto`). Each excluded
-system is replaced by an adapter in `modules/rts/disabled/` (CMake
+system is replaced by an adapter in `engine/game/disabled/` (CMake
 `aiverse_game_module`, options `AIVERSE_GAME_WITH_*`). The adapter keeps the
 system inactive, so games that do not use it run, hash and save exactly as
 with the full module; data that needs it fails at match start with a readable
@@ -510,7 +510,7 @@ For `wss://` (a game page served over HTTPS), put a TLS proxy (nginx, Caddy) in 
 
 `engine/audio` is a mixer, sound banks from data, procedural synthesis and music; output goes through
 [miniaudio](../third_party/miniaudio) (CoreAudio, AAudio/OpenSL ES, Web Audio, WASAPI, ALSA/PulseAudio).
-`modules/rts/audio` turns simulation events into sounds; it writes nothing into the simulation.
+`engine/audio` turns simulation events into sounds; it writes nothing into the simulation.
 No device — the game runs silently. No `audio.json` — the game simply has no sound.
 
 A game's audio is the `audio.json` file next to `game.json` (another name: `"audio"` in game.json). The full format

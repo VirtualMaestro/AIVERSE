@@ -51,9 +51,9 @@ on the caller thread after a complete barrier. Force serialization with
 `AnimationWorkHintComponent::mainThread=true` when a host has another
 thread-bound integration; use `multiplier` to guide work partitioning.
 
-For FPS prefer `fps.visual.animationMode="auto"`: simple skinned crowds can
+For FPS prefer `actor.visual.animationMode="auto"`: simple skinned crowds can
 use GPU baked instancing (24 enter/12 exit by default); custom graphs and rigs
-use the CPU scheduler. Optional `fps.visual.animationStats=true` shows a
+use the CPU scheduler. Optional `actor.visual.animationStats=true` shows a
 non-authoritative debugging overlay. The independent CTest targets are
 `motionweave_workers`, `motionweave_hybrid`,
 `motionweave_cost_balancing`, `motionweave_backend_selection`, and

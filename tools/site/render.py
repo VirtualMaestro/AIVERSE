@@ -672,7 +672,8 @@ def releases_page(data, entries, systems, ctx, repo):
         if sid in pages:
             return f'<a class="rm-sys" href="system-{esc(sid)}.html">{label}</a>'
         return f'<span class="rm-sys">{label}</span>'
-    fresh = [e for e in entries if e['date'] > since]
+    shipped = data.get('_shipped')
+    fresh = [e for e in entries if (e['id'] not in shipped if shipped is not None else e['date'] > since)]
     head = (f'<section class="dl-hero"><div><p class="eyebrow">{ctx.T["relEyebrow"]}</p><h1>{ctx.T["relTitle"]}</h1>'
             f'<p>{ctx.T["relLead"]}</p></div>'
             f'<div class="dl-stats"><div><strong>{esc(latest["version"]) if latest else "—"}</strong><span>{ctx.T["relLatest"]}</span></div>'
@@ -781,7 +782,7 @@ box.hidden=false;}}).catch(function(){}).then(function(){document.querySelectorA
 
 
 def catalog_page(cfg, ctx):
-    """Package catalog: the cards are filled in the browser from AIVERSE-PLUGINS index.json."""
+    """Package catalog: the cards are filled in the browser from AIVERSE-PACKAGES index.json."""
     T = ctx.T
     return (f'<section class="dl-hero"><div><p class="eyebrow">{T["catEyebrow"]}</p><h1>{T["catTitle"]}</h1>'
             f'<p>{T["catLead"]}</p></div>'
@@ -796,14 +797,16 @@ def catalog_page(cfg, ctx):
             f'<section class="cat-howto"><div><h2>{T["catHowTitle"]}</h2><p>{T["catHowLead"]}</p>'
             f'<pre><code>python3 tools/pkg/aiverse_pkg.py search terrain\n'
             f'python3 tools/pkg/aiverse_pkg.py add terrain-pbr --project ~/Games/MyGame</code></pre></div>'
-            f'<div><h2>{T["catAddTitle"]}</h2><p>{T["catAddLead"]}</p>'
-            f'<p><a class="btn btn-ink btn-sm" href="{esc(cfg["repo"])}/blob/main/CONTRIBUTING.md">{T["catAddBtn"]}</a> '
+            f'<div id="add"><h2>{T["catAddTitle"]}</h2><p>{T["catAddLead"]}</p>'
+            f'<ol class="cat-steps">{"".join(f"<li>{x}</li>" for x in T["catAddSteps"])}</ol>'
+            f'<p><a class="btn btn-ink btn-sm" href="docs-packages.html#{T["catAddAnchor"]}">{T["catAddBtn"]}</a> '
+            f'<a class="btn btn-line btn-sm" href="{esc(cfg["repo"])}/blob/main/CONTRIBUTING.md">CONTRIBUTING.md</a> '
             f'<a class="btn btn-line btn-sm" href="{esc(cfg["repo"])}">GitHub</a></p></div></section>')
 
 
 CATALOG_JS = """<script>
 (function(){var cfg=window.CAT_CFG;if(!cfg)return;var T=cfg.t,lang=cfg.lang;
-function loc(o,k){return (lang!=='ru'&&o[k+'En'])||o[k]||'';}
+function loc(o,k){return (lang!=='en'&&o[k+'-'+lang])||o[k]||'';}
 function el(tag,cls,text){var e=document.createElement(tag);if(cls)e.className=cls;if(text!=null)e.textContent=text;return e;}
 function mb(n){return n>=1048576?(n/1048576).toFixed(n>=104857600?0:1)+' MB':Math.max(1,Math.round(n/1024))+' KB';}
 var grid=document.querySelector('.cat-grid'),status=document.querySelector('.cat-status'),bar=document.querySelector('.cat-filters'),
@@ -827,22 +830,41 @@ cp.onclick=function(){navigator.clipboard&&navigator.clipboard.writeText(code.te
 pre.appendChild(code);pre.appendChild(cp);body.appendChild(pre);
 var act=el('div','cat-actions'),dl=el('a','btn btn-ink btn-sm',T.download+' · '+mb(v.size));dl.href=v.url;dl.title='sha256 '+v.sha256;act.appendChild(dl);
 if(p.readme){var r=el('a','btn btn-line btn-sm',T.readme);r.href=p.readme;act.appendChild(r);}
-if(p.viewer&&p.viewer.url){var v3=el('button','btn btn-accent btn-sm cat-3d',T.view3d);v3.type='button';v3.onclick=function(){
-var f=media.querySelector('iframe');if(f){f.remove();img.hidden=false;v3.textContent=T.view3d;return;}
-f=el('iframe','cat-frame');f.src=p.viewer.url+(p.viewer.url.indexOf('?')<0?'?':'&')+'lang='+lang;f.title=loc(p,'title')+' — 3D';f.setAttribute('allow','fullscreen');f.loading='lazy';
-img.hidden=true;media.appendChild(f);v3.textContent=T.view3dClose;};act.insertBefore(v3,act.firstChild);}
+a.item=0;a.link=function(){return location.origin+location.pathname+'#pkg-'+p.id+(a.classList.contains('is-open')&&a.item?'/'+a.item:'');};
+if(p.viewer){var v3=el('button','btn btn-accent btn-sm cat-3d',T.view3d);v3.type='button';
+a.open3d=function(item){var f=media.querySelector('iframe');if(f){f.remove();img.hidden=false;v3.textContent=T.view3d;a.classList.remove('is-open');
+history.replaceState(null,'','#pkg-'+p.id);a.scrollIntoView({block:'nearest'});return;}
+cards.forEach(function(c){if(c.el!==a&&c.el.querySelector('.cat-frame'))c.el.open3d();});
+a.item=item||0;a.classList.add('is-open');setTimeout(function(){a.scrollIntoView({behavior:'smooth',block:'start'});},30);
+f=el('iframe','cat-frame');f.src=p.viewer+(p.viewer.indexOf('?')<0?'?':'&')+'lang='+lang+(a.item?'&item='+a.item:'');f.title=loc(p,'title')+' — 3D';f.setAttribute('allow','fullscreen');f.loading='lazy';
+img.hidden=true;media.appendChild(f);v3.textContent=T.view3dClose;history.replaceState(null,'','#pkg-'+p.id+(a.item?'/'+a.item:''));};
+v3.onclick=function(){a.open3d(0);};act.insertBefore(v3,act.firstChild);}
+var ln=el('button','btn btn-line btn-sm',T.link);ln.type='button';ln.title=T.link;
+ln.onclick=function(){var u=a.link();history.replaceState(null,'','#'+u.split('#')[1]);navigator.clipboard&&navigator.clipboard.writeText(u).then(function(){ln.textContent=T.linkCopied;setTimeout(function(){ln.textContent=T.link;},1500);});};
+act.appendChild(ln);
 body.appendChild(act);a.appendChild(body);
-cards.push({el:a,cat:p.category,hay:[p.id,p.title,p.titleEn,p.summary,p.summaryEn,(p.tags||[]).join(' '),JSON.stringify(p.provides||{})].join(' ').toLowerCase()});
+cards.push({el:a,cat:p.category,hay:[p.id].concat(Object.keys(p).filter(function(k){return /^(title|summary)(-|$)/.test(k);}).map(function(k){return p[k];}),
+(p.tags||[]).join(' '),JSON.stringify(p.provides||{})).join(' ').toLowerCase()});
 return a;}
-fetch(cfg.index,{cache:'no-store'}).then(function(r){if(!r.ok)throw 0;return r.json();}).then(function(d){
-var pk=d.packages||[],used={};pk.forEach(function(p){used[p.category]=1;grid.appendChild(card(p));});
+function json(u){return fetch(u,{cache:'no-store'}).then(function(r){if(!r.ok)throw 0;return r.json();});}
+var base=cfg.index.replace(/[^/]*$/,'');
+// index.json lists {id, category, path}; each package folder has aiverse.package.json + versions.json
+json(cfg.index).then(function(d){return Promise.all((d.packages||[]).map(function(it){
+return Promise.all([json(base+it.path+'/aiverse.package.json'),json(base+it.path+'/versions.json')]).then(function(r){
+var p=r[0];['latest','versions','previews','readme','viewer'].forEach(function(k){if(r[1][k]!=null)p[k]=r[1][k];});p.category=it.category;return p;},
+function(){return null;});}));}).then(function(list){
+var pk=list.filter(function(p){return p&&p.versions&&p.versions[p.latest];}),used={};pk.forEach(function(p){used[p.category]=1;grid.appendChild(card(p));});
 Object.keys(cfg.cats).forEach(function(c){if(!used[c])return;var b=el('button','filter',cfg.cats[c]);b.type='button';b.dataset.cat=c;b.setAttribute('aria-pressed','false');bar.appendChild(b);});
 bar.querySelectorAll('.filter').forEach(function(b){b.onclick=function(){cur=b.dataset.cat;bar.querySelectorAll('.filter').forEach(function(x){x.setAttribute('aria-pressed',String(x===b));});
 history.replaceState(null,'',cur?'#cat='+cur:location.pathname);apply();};});
 document.querySelector('.cat-n').textContent=pk.length;document.querySelector('.cat-c').textContent=Object.keys(used).length;
 var h=location.hash.match(/^#cat=([a-z]+)/);if(h){var b=bar.querySelector('[data-cat="'+h[1]+'"]');if(b)b.click();}
 status.textContent='';apply();
-var m=location.hash.match(/^#pkg-([a-z0-9-]+)/);if(m){var t=document.getElementById('pkg-'+m[1]);if(t)t.scrollIntoView();}
+var m=location.hash.match(/^#pkg-([a-z0-9-]+)(?:[/]([0-9]+))?/);if(m){var t=document.getElementById('pkg-'+m[1]);
+if(t){if(t.open3d)t.open3d(parseInt(m[2]||'0',10));else t.scrollIntoView();}}
+// the 3D viewer tells which model it shows: the address points to it (#pkg-<id>/<model>)
+window.addEventListener('message',function(e){var d=e.data;if(!d||d.cv!=='item')return;cards.forEach(function(c){
+var f=c.el.querySelector('.cat-frame');if(f&&f.contentWindow===e.source){c.el.item=d.item;history.replaceState(null,'','#'+c.el.link().split('#')[1]);}});});
 }).catch(function(){status.textContent=T.error;});
 search.addEventListener('input',apply);})();
 </script>"""

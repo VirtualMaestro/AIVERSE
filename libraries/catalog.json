@@ -2236,7 +2236,7 @@
       "source": "engine/mechanics/Traffic.h",
       "skill": "skills/gameplay/aiverse-city-traffic/SKILL.md",
       "summary": "City traffic kernels: road network from a cell mask or curved spline pieces, lanes, junction turns, signal phases and pedestrian walk windows, bot driver pedals, sidewalk walker paths; routes for large/emergency vehicles (wide-street exit choice, bounded local detour around a blockage)",
-      "notes": "Header kernels used by modules/rts/RtsTraffic (rules traffic, docs/traffic.md) and usable from a native module without the RTS module. Fixed / integers and the immutable net only. trafficWideExit always allows the first and the last piece so stations on narrow streets stay reachable; trafficLocalDetour is bounded by its lattice and must be followed by the normal collision checks.",
+      "notes": "Header kernels used by engine/game/Traffic (rules traffic, docs/traffic.md) and usable from a native module without the RTS module. Fixed / integers and the immutable net only. trafficWideExit always allows the first and the last piece so stations on narrow streets stay reachable; trafficLocalDetour is bounded by its lattice and must be followed by the normal collision checks.",
       "cmakeTarget": "AIVERSE::lib_city_traffic"
     },
     {

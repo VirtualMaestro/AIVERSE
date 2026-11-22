@@ -39,8 +39,8 @@ def main():
         os.environ['AIVERSE_PACKAGES_HOME'] = str(tmp / 'home')
         dist = tmp / 'dist'
         dist.mkdir()
-        mats = {'schema': 1, 'id': 'demo-mats', 'kind': 'content', 'category': 'materials', 'title': 'Демо',
-                'titleEn': 'Demo', 'license': 'MIT', 'minEngine': '0.0.1',
+        mats = {'schema': 1, 'id': 'demo-mats', 'kind': 'content', 'category': 'materials', 'title': 'Demo',
+                'title-ru': 'Демо', 'license': 'MIT', 'minEngine': '0.0.1',
                 'install': {'mount': 'materials/demo', 'mergeJson': [{'from': 'materials.json', 'into': 'materials.json'}]}}
         v1 = make_zip(dist / 'm1.zip', dict(mats, version='1.0.0'),
                       {'materials.json': '{"demo_a": {"r": 1}}', 'textures/a.png': b'png-a'})
@@ -48,26 +48,33 @@ def main():
                       {'materials.json': '{"demo_a": {"r": 2}, "demo_b": {}}', 'textures/a.png': b'png-a2'})
         v3 = make_zip(dist / 'm3.zip', dict(mats, version='2.0.0'), {'materials.json': '{}'})
         src = {'schema': 1, 'id': 'demo-src', 'version': '1.0.0', 'kind': 'source', 'category': 'textures',
-               'title': 'Исх', 'titleEn': 'Src', 'license': 'MIT'}
+               'title': 'Src', 'title-ru': 'Исх', 'license': 'MIT'}
         s1 = make_zip(dist / 's1.zip', src, {'raw.png': b'raw'})
         tpl = {'schema': 1, 'id': 'demo-tpl', 'version': '1.0.0', 'kind': 'template', 'category': 'templates',
-               'title': 'Шаблон', 'titleEn': 'Template', 'license': 'MIT'}
+               'title': 'Template', 'title-ru': 'Шаблон', 'license': 'MIT'}
         t1 = make_zip(dist / 't1.zip', tpl, {'game.json': json.dumps({'name': 'Tpl', 'packages': {'demo-mats': '^1.0'}}),
                                              'maps/start.json': '{}'})
+        mdl = {'schema': 1, 'id': 'demo-models', 'version': '1.0.0', 'kind': 'content', 'category': 'models',
+               'title': 'Models', 'title-ru': 'Модели', 'license': 'MIT', 'dependencies': {'demo-mats': '^1.0'},
+               'install': {'mount': 'models/demo'}}
+        md1 = make_zip(dist / 'md1.zip', mdl, {'a.gltf': '{"images": [{"uri": "../../materials/demo/textures/a.png"}]}'})
         bad = make_zip(dist / 'bad.zip', dict(src, id='demo-bad'), {'x': 'y'})
         bad['sha256'] = '0' * 64
-        index = {'schema': 1, 'packages': [
-            {'id': 'demo-mats', 'kind': 'content', 'category': 'materials', 'title': 'Демо', 'titleEn': 'Demo',
-             'tags': ['pbr'], 'latest': '2.0.0', 'versions': {'1.0.0': v1, '1.1.0': v2, '2.0.0': v3}},
-            {'id': 'demo-src', 'kind': 'source', 'category': 'textures', 'title': 'Исх', 'latest': '1.0.0',
-             'versions': {'1.0.0': s1}},
-            {'id': 'demo-tpl', 'kind': 'template', 'category': 'templates', 'title': 'Шаблон', 'latest': '1.0.0',
-             'versions': {'1.0.0': t1}},
-            {'id': 'demo-bad', 'kind': 'source', 'category': 'textures', 'title': 'x', 'latest': '1.0.0',
-             'versions': {'1.0.0': bad}},
-        ]}
-        (tmp / 'index.json').write_text(json.dumps(index))
-        os.environ['AIVERSE_PACKAGES_INDEX'] = str(tmp / 'index.json')
+        published = [(mats, 'materials', {'1.0.0': v1, '1.1.0': v2, '2.0.0': v3}), (src, 'textures', {'1.0.0': s1}),
+                     (tpl, 'templates', {'1.0.0': t1}), (mdl, 'models', {'1.0.0': md1}),
+                     (dict(src, id='demo-bad'), 'textures', {'1.0.0': bad})]
+        cat = tmp / 'catalog'
+        index = {'schema': 2, 'packages': []}
+        for m, category, versions in published:
+            folder = cat / category / m['id']
+            folder.mkdir(parents=True)
+            (folder / pkg.MANIFEST).write_text(json.dumps(dict(m, version=max(versions, key=pkg.parse_version),
+                                                               tags=['pbr'] if m['id'] == 'demo-mats' else [])))
+            (folder / 'versions.json').write_text(json.dumps({'id': m['id'], 'versions': versions,
+                                                              'latest': max(versions, key=pkg.parse_version)}))
+            index['packages'].append({'id': m['id'], 'category': category, 'path': f"{category}/{m['id']}"})
+        (cat / 'index.json').write_text(json.dumps(index))
+        os.environ['AIVERSE_PACKAGES_INDEX'] = str(cat / 'index.json')
 
         assert pkg.matches('1.4.0', '^1.2') and not pkg.matches('2.0.0', '^1.2')
         assert pkg.matches('1.2.9', '~1.2.3') and not pkg.matches('1.3.0', '~1.2.3')
@@ -122,6 +129,17 @@ def main():
         assert code == 0 and not (proj / 'materials').exists() and not (proj / pkg.LOCK).exists()
         assert json.loads((proj / 'materials.json').read_text()) == {'own': {}}
         assert 'packages' not in json.loads((proj / 'game.json').read_text())
+
+        # a model pack brings the material package it refers to
+        p3 = tmp / 'proj3'
+        p3.mkdir()
+        (p3 / 'game.json').write_text('{}')
+        code, r, _ = run('add', 'demo-models', '--project', str(p3))
+        assert code == 0 and r['result']['dependencies'][0]['version'] == '1.1.0', r
+        assert (p3 / 'models/demo/a.gltf').is_file() and (p3 / 'materials/demo/textures/a.png').is_file()
+        assert set(json.loads((p3 / pkg.LOCK).read_text())['packages']) == {'demo-mats', 'demo-models'}
+        code, r, _ = run('add', 'demo-models', '--project', str(p3))
+        assert code == 0 and 'dependencies' not in r['result'], r
 
         code, r, _ = run('create', 'demo-tpl', str(tmp / 'newgame'))
         assert code == 0, r

@@ -3,7 +3,7 @@
 A top-down city game (docs/topdown.md, docs/driving.md) gets living streets from data only: cars driven by the
 computer keep their lanes, turn at junctions and stop at red lights; traffic light props show the signals;
 pedestrians walk the sidewalks, wait at the kerb and cross at the junctions on "walk", and run away from gunfire.
-Simulation: `modules/rts/RtsTraffic.{h,cpp}`; the reusable kernels (road network, lanes, signal phases, the bot
+Simulation: `engine/game/Traffic.{h,cpp}`; the reusable kernels (road network, lanes, signal phases, the bot
 driver's pedals, sidewalk paths) are header-only in `engine/mechanics/Traffic.h` and can be used
 by a game's native module without the RTS module. Tests: `aiverse_tests traffic_`.
 

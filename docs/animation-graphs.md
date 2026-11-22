@@ -604,7 +604,7 @@ registry owns immutable compiled graph/material snapshots, not a
 runtime `AnimationGraphInstance`. Its `sourceId=1` is the *asset
 authoring key*, not an ECS actor identity. Actual remote actors keep
 their own presentation ECS entities, per-actor clips and MotionWeave
-updates. When a watched `fps.visual.graphFile` changes, the FPS host
+updates. When a watched `actor.visual.graphFile` changes, the FPS host
 invalidates that source, publishes a replacement, then updates the
 existing `AnimationAssetComponent` and marks the existing player for
 restart; failure leaves the current player untouched. Draw submission

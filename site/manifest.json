@@ -7,7 +7,7 @@
     "docs/images/readme/sponza-light-shafts.png"
   ],
   "catalog": {
-    "repo": "https://github.com/chromealex/AIVERSE-PLUGINS",
-    "index": "https://raw.githubusercontent.com/chromealex/AIVERSE-PLUGINS/main/index.json"
+    "repo": "https://github.com/chromealex/AIVERSE-PACKAGES",
+    "index": "https://raw.githubusercontent.com/chromealex/AIVERSE-PACKAGES/main/index.json"
   }
 }

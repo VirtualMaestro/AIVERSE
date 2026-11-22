@@ -86,7 +86,7 @@ def build_pack(output, asset_root):
     import sys
     sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "pkg"))
     from aiverse_pkg import package_dir
-    source = package_dir("vegetation-pbr")  # AIVERSE-PLUGINS catalog
+    source = package_dir("vegetation-pbr")  # AIVERSE-PACKAGES catalog
     catalog = json.loads((source / "catalog.json").read_text())
     output.mkdir(parents=True)
     materials, library = {}, {}

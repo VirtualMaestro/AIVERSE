@@ -38,7 +38,7 @@ All specialist libraries still have their historical
 ## Runtime design
 
 **Presentation:** floats, AnimationGraph instances, IK and skinning reside in
-a dedicated visual ECS World. FPS opts into `fps.visual.model`, configurable
+a dedicated visual ECS World. FPS opts into `actor.visual.model`, configurable
 Graph or baked crowd animation, preserving cube fallback. Existing RTS view
 continues using its original animation path until migrated deliberately.
 
@@ -100,14 +100,14 @@ presentation diagnostics; they never affect gameplay lockstep/checksums.
 
 ### Automatic backend for FPS
 
-FPS supports `fps.visual.animationMode: "auto" | "cpu" | "gpu"`
+FPS supports `actor.visual.animationMode: "auto" | "cpu" | "gpu"`
 and legacy `bakedCrowd: true`. With an eligible simple imported,
 skinned model, auto mode enters GPU baked instancing at 24 visible
 remote characters and exits at 12, avoiding frequent toggling.
 Complex custom graphs, IK/controller requirements and `graphFile`
 stay on CPU; the FPS client lazily constructs the persistent scheduler
 when 16+ palette characters are present.
-`fps.visual.animationStats: true` enables optional HUD diagnostics.
+`actor.visual.animationStats: true` enables optional HUD diagnostics.
 
 GPU scene draws and uploads remain on the graphics thread.
 The fast crowd path reuses AIVERSE's existing baked skinning and

@@ -103,7 +103,7 @@ When the game uses a **flat RTS grid map**, open the editor's
 3. Generator metadata is stored under map `terraweave` with
    `version:1`, but is not automatically re-evaluated on map load.
 
-Do not invoke flat MapDoc operations for world-space (legacy `data.fps`) or planet maps (map formats, debt G2). The
+Do not invoke flat MapDoc operations for world-space (`data.worldSpace`) or planet maps (map formats, debt G2). The
 generic C++ generation API works across genres but those formats
 need separate scene adapters. Preview is currently numeric, not
 a GPU screenshot. Before reporting success, verify the map can undo,

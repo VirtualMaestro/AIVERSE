@@ -21,7 +21,7 @@
           "lead": "game.json, rules.json, карты, UI, эффекты и звук.", "leadEn": "game.json, rules.json, maps, UI, effects and audio." },
         { "id": "packages", "source": "docs/packages.md",
           "title": "Пакеты и каталог", "titleEn": "Packages and the catalog",
-          "lead": "Дополнительный контент из каталога AIVERSE-PLUGINS: поиск, установка в проект, lock-файл, публикация через pull request.", "leadEn": "Optional content from the AIVERSE-PLUGINS catalog: search, project install, lock file, publishing by pull request." },
+          "lead": "Дополнительный контент из каталога AIVERSE-PACKAGES: поиск, установка в проект, lock-файл, публикация через pull request.", "leadEn": "Optional content from the AIVERSE-PACKAGES catalog: search, project install, lock file, publishing by pull request." },
         { "id": "scripting", "source": "docs/scripting.md",
           "title": "Скрипты на Lua", "titleEn": "Lua scripting",
           "lead": "Детерминированный Lua в симуляции, бюджеты и горячая перезагрузка.", "leadEn": "Deterministic Lua in the simulation, budgets and hot reload." },
