@@ -2461,7 +2461,8 @@ endif()
 
 # Project import (shared Python pipeline + editor/MCP bridge).
 if(TARGET aiverse_editor_core)
-    target_sources(aiverse_editor_core PRIVATE apps/editor/core/PortOps.cpp apps/editor/core/PackageOps.cpp)
+    target_sources(aiverse_editor_core PRIVATE apps/editor/core/PortOps.cpp apps/editor/core/PackageOps.cpp
+        apps/editor/core/PackageTool.cpp)
 endif()
 if(AIVERSE_BUILD_TESTS AND Python3_Interpreter_FOUND)
     add_test(NAME project_importer COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/tools/importers/port/test_port.py)

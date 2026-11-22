@@ -1396,6 +1396,10 @@ bool StudioHost::handleHostMethod(const Json& req) {
         const std::string name = params.getStr("name"), templ = params.getStr("template");
         if (name.empty() || name.size() > 120) { sendError(req["id"], "Give the project a name"); return true; }
         bool known = false;
+        if (editor::isCatalogTemplate(templ)) {   // a catalog template package: its id is checked by aiverse_pkg.py
+            known = templ.size() > 4 && templ.size() < 70 &&
+                    templ.find_first_not_of("abcdefghijklmnopqrstuvwxyz0123456789-", 4) == std::string::npos;
+        }
         for (const auto& t : editor::listTemplates(session_->workspace().engineDir)) if (t.id == templ) known = true;
         if (!known) { sendError(req["id"], "Unknown template"); return true; }
         const std::string location = editor::defaultProjectsDir();
