@@ -9,7 +9,7 @@ Use when a project has armor-like pieces with levels and durability (equipment s
 `engine/actor` host wires it from rules (`gear` at the top level or `actor.gear`, docs/fps.md § Gear); the same block on other hosts is debt G4/G6
 in `docs/no-genre-split-audit.md`. The steps below are for native / host owners.
 
-1. Read `libraries/include/aiverselib/systems/Gear.h` (namespace `aiverse::lib::systems`) and the catalog entry.
+1. Read `engine/systems/Gear.h` (namespace `aiverse::lib::systems`) and the catalog entry.
 2. Data: `readGearCatalog(json["gear"], "gear")` - pieces with `id`, `slot` (your slot numbering), `tier`,
    `durability`, `reduction` and `wear` (milli: 550 = 55 %, 1000 = one durability point per absorbed point),
    `zones` (bit mask of your hit zones, e.g. 1 head, 2 body, 4 legs) and `capacity`. Errors name the path

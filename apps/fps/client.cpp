@@ -10,6 +10,7 @@
 #include "engine/net/Udp.h"
 #include "engine/net/WebSocket.h"
 #include "engine/platform/Platform.h"
+#include "apps/client/HostBoot.h"
 #include "engine/platform/InputFlow.h"
 #include "engine/world/ChunkScene.h"
 #include "engine/world/WorldScene.h"
@@ -17,9 +18,9 @@
 #include "engine/platform/ContentReader.h"
 #include "engine/render/Renderer3D.h"
 #include "engine/fx/SpectraFxSceneHost.h"
-#include "libraries/include/aiverselib/motionweave/MotionWeave.h"
+#include "engine/animation/MotionWeave.h"
 #include "libraries/include/aiverselib/animation/AnimationCrowdSystems.h"
-#include "libraries/include/aiverselib/animation/AnimationBudgetPolicy.h"
+#include "engine/animation/AnimationBudgetPolicy.h"
 #include "libraries/include/aiverselib/animation/AnimationBackendPolicy.h"
 #include "libraries/include/aiverselib/animation/AnimationEventDispatch.h"
 #include "libraries/include/aiverselib/animation/AnimationAssetLoader.h"
@@ -909,6 +910,11 @@ struct App {
                 if(held("Block"))input.buttons|=actor::Block;
                 if(held("LockOn"))input.buttons|=actor::LockOn;
             }
+            if(config.locomotion){
+                if(held("Dash"))input.buttons|=actor::Dash;
+                if(held("Grapple"))input.buttons|=actor::Grapple;
+                if(held("Glide"))input.buttons|=actor::Glide;
+            }
             // Testing (screenshots): AIVERSE_FPS_WATCH=1 turns the view to the nearest living remote character.
             static const bool watchRemote=std::getenv("AIVERSE_FPS_WATCH")!=nullptr;
             if(watchRemote) {
@@ -1306,8 +1312,9 @@ int actorClientMain(int argc,char** argv) {
 #endif
         } else {auto conn=net::connectTo(connect);if(!conn)throw std::runtime_error("invalid server address");if(!sessionTokenFile.empty()){std::ifstream tokenFile(sessionTokenFile);std::string token;std::getline(tokenFile,token);if(!tokenFile||!aiverse::lib::session::detail::tokenValid(token))throw std::runtime_error("invalid session token file");conn=std::make_unique<aiverse::lib::session::ClientAdmission>(std::move(conn),std::move(token));}app.client=std::make_unique<net::authority::Client>(app.rules,app.map,std::move(conn),app.contentReader);}
         platform::AppConfig cfg;cfg.title="AIVERSE FPS";cfg.width=1280;cfg.height=720;
-        gfx::Device* device=nullptr;platform::AppCallbacks cb;
-        cb.init=[&](auto& d){device=&d;app.init(d);};cb.frame=[&](auto& d,double dt){app.frame(d,dt);};cb.event=[&](const auto& e){app.event(e);};cb.shutdown=[&]{app.shutdown(*device);};
+        // The shared loading screen (game.json "splash"; apps/client/HostBoot.h) shows while the app loads.
+        client::useEngineAssets(engineRoot);
+        platform::AppCallbacks cb;client::HostBoot boot;boot.install(cb,app,data.manifest["splash"],project);
         return platform::run(cfg,cb);
     }catch(const std::exception& e){std::fprintf(stderr,"%s\n",e.what());return 1;}
 }

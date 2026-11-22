@@ -1972,6 +1972,22 @@ image with transparency (it is flattened on `background`).
 
 ### splash
 
+Every client - game, actor (first / third person, races, battle royale) and voxel projects - shows the same
+loading screen at startup and on map loads (`engine/splash/SplashBoot.h`), and the project alone decides what
+it is:
+
+| `"splash"` value | Loading screen |
+|---|---|
+| missing, `null`, `true`, `"default"` | the engine's screen (the AIVERSE mark assembling) |
+| `false`, `"none"`, `{"enabled": false}` | none: the game loads, then shows (no logo, no bar, no labels) |
+| `{"base": "engine", ...}` | the engine's screen with these keys replaced; objects merge, so `{"base": "engine", "progress": {"color": "#00c0ff"}}` only recolours the bar, `"logos": [...]` swaps the art, `"minSeconds": 0` leaves as soon as loading is done |
+| any other object | the project's own screen (format below); background only = `{"background": "#000000", "progress": false}` |
+
+`"mapLoading"` inside the block chooses the screen of later map loads: `"same"` (default), `false` (none) or
+any value from the table. The engine art is found from a package (`content/engine`) and, in dev runs on a
+project folder, from the engine's `engine/assets` (`platform::setEngineAssetsDir`). Choices:
+`splash::resolveBlock` / `resolveMapBlock` / `projectSpec`, test `splash_choice`.
+
 ```json
 "splash": {
   "background": "#0a0f16",
@@ -2021,7 +2037,8 @@ image with transparency (it is flattened on `background`).
 - Split builds always keep the splash images in the base pack.
 - **Defaults**: a game without a `splash` block gets the engine's loading screen — the AIVERSE
   mark assembling on `#0e0f11` with an orange progress bar (`splash::defaultBlock()`, art in
-  `engine/assets/branding`); `"splash": false` shows only the background colour while loading.
+  `engine/assets/branding`); `"splash": false` now means no loading screen at all (it used to show the
+  background colour only: write `{"background": "#..", "progress": false}` for that).
   Without `icons` the build uses the AIVERSE mark on white (`branding::defaultIcon`). Both are
   drawn from one geometry: `tools/branding/logo/make_logo.py` (also the editor's icon,
   `apps/editor/branding`).

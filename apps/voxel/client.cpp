@@ -10,6 +10,7 @@
 #include "engine/net/Udp.h"
 #include "engine/net/WebSocket.h"
 #include "engine/platform/Platform.h"
+#include "apps/client/HostBoot.h"
 #include "engine/platform/EngineDir.h"
 #include "engine/render/Renderer3D.h"
 #include "engine/render/ImGuiLayer.h"
@@ -149,8 +150,9 @@ int voxelClientMain(int argc,char** argv){
 #endif
         }else{auto conn=net::connectTo(connect);if(!conn)throw std::runtime_error("invalid server address");app.client=std::make_unique<voxelgame::Client>(app.rules,app.map,std::move(conn));}
         platform::AppConfig cfg;cfg.title=data.manifest.getStr("name","AIVERSE Blocks");cfg.width=1280;cfg.height=720;
-        gfx::Device* device=nullptr;platform::AppCallbacks cb;
-        cb.init=[&](auto& d){device=&d;app.init(d);};cb.frame=[&](auto& d,double dt){app.frame(d,dt);};cb.event=[&](const auto& e){app.event(e);};cb.shutdown=[&]{app.shutdown(*device);};
+        // The shared loading screen (game.json "splash"; apps/client/HostBoot.h) shows while the app loads.
+        client::useEngineAssets(engineRoot);
+        platform::AppCallbacks cb;client::HostBoot boot;boot.install(cb,app,data.manifest["splash"],project);
         return platform::run(cfg,cb);
     }catch(const std::exception& e){std::fprintf(stderr,"%s\n",e.what());return 1;}
 }

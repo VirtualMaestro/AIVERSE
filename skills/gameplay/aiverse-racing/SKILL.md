@@ -6,7 +6,7 @@ description: Add or change a race in any AIVERSE project - map and rules "race" 
 # races
 
 A race is a capability of any project with cars, never a genre mode. Format and behaviour: `docs/races.md`.
-Simulation: `libraries/include/aiverselib/mechanics/RaceSession.h` (data: `mechanics/RaceSessionData.h`; dynamics and the race
+Simulation: `engine/mechanics/RaceSession.h` (data: `mechanics/RaceSessionData.h`; dynamics and the race
 bot: `skills/gameplay/aiverse-vehicle-controllers`). Presentation: `engine/ui/RaceHud.h`, `engine/render/CameraBehavior.h`.
 
 1. The project needs cars its host already steps: typed map vehicles (`actor.vehicleTypes` + map `vehicles` with

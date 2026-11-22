@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.22)
-project(AIVERSE VERSION 3.0.0 LANGUAGES C CXX)
+project(AIVERSE VERSION 3.1.0 LANGUAGES C CXX)
 # Apple ld: the same static library listed twice in a link line is harmless (CMake repeats them for dependencies)
 if(APPLE)
     include(CheckLinkerFlag)
@@ -158,7 +158,8 @@ if(EXISTS "${AIVERSE_PLUGINS_FILE}")
 endif()
 
 if(MSVC)
-    add_compile_options(/W4 /permissive- /fp:precise /utf-8 /wd4100 /wd4505)
+    # /bigobj: big translation units (tests.cpp, editor WorldInspect.cpp) exceed the default COFF section limit
+    add_compile_options(/W4 /permissive- /fp:precise /utf-8 /bigobj /wd4100 /wd4505)
     add_compile_definitions(_CRT_SECURE_NO_WARNINGS)
 else()
     add_compile_options(-Wall -Wextra -fno-fast-math)
@@ -304,7 +305,7 @@ target_link_libraries(aiverse_game PUBLIC aiverse_engine)
 # only implement its world queries.
 add_library(aiverse_vehicles STATIC engine/vehicles/Vehicles.cpp engine/vehicles/VehicleRace.cpp)
 add_library(AIVERSE::vehicles ALIAS aiverse_vehicles)
-target_include_directories(aiverse_vehicles PUBLIC "${PROJECT_SOURCE_DIR}" "${PROJECT_SOURCE_DIR}/libraries/include")
+target_include_directories(aiverse_vehicles PUBLIC "${PROJECT_SOURCE_DIR}")   # engine never includes libraries/ (docs/architecture-layers.md)
 target_link_libraries(aiverse_vehicles PUBLIC aiverse_engine)
 target_link_libraries(aiverse_game PUBLIC aiverse_vehicles)
 # Experimental RTS transform preprocessing remains OFF by default.
@@ -317,11 +318,8 @@ if(AIVERSE_ECS_EXPERIMENTAL_RTS_TRANSFORM_JOBS)
 endif()
 
 add_subdirectory(libraries)
-# RTS projectile motion and impact use the public, genre-independent packages
-# rather than implementing their own physics or duplicating damage ordering.
-target_link_libraries(aiverse_game PRIVATE
-    AIVERSE::lib_ecs_kinematic_projectiles
-    AIVERSE::lib_ecs_ordered_impact)
+# Projectile motion and impact use the shared ECS mechanics in engine/mechanics (moved down from libraries, L3);
+# engine targets never link library packages.
 # Prove public shared mechanics can execute in unrelated native genre hosts.
 # The target uses AIVERSE::libraries, never aiverse_game or aiverse_fps.
 if(AIVERSE_BUILD_TESTS AND NOT EMSCRIPTEN)
@@ -676,6 +674,17 @@ if(AIVERSE_BUILD_TESTS)
 endif()
 
 # Genre-independent ECS animation presentation host for native C++ projects.
+# MotionWeave core (engine/animation): the engine-side target, no libraries/ include path. Engine targets
+# (aiverse_view) link this one; the public package targets below add the library-level animation headers.
+add_library(aiverse_motionweave_core INTERFACE)
+target_compile_features(aiverse_motionweave_core INTERFACE cxx_std_20)
+target_include_directories(aiverse_motionweave_core INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}")
+if(NOT EMSCRIPTEN)
+    find_package(Threads REQUIRED)
+    target_link_libraries(aiverse_motionweave_core INTERFACE aiverse_models Threads::Threads)
+else()
+    target_link_libraries(aiverse_motionweave_core INTERFACE aiverse_models)
+endif()
 add_library(aiverse_animation_ecs INTERFACE)
 add_library(AIVERSE::animation_ecs ALIAS aiverse_animation_ecs)
 # MotionWeave is the canonical public API name; the existing animation_ecs
@@ -684,14 +693,8 @@ add_library(aiverse_motionweave INTERFACE)
 add_library(AIVERSE::MotionWeave ALIAS aiverse_motionweave)
 add_library(AIVERSE::motionweave ALIAS aiverse_motionweave)
 target_link_libraries(aiverse_motionweave INTERFACE AIVERSE::animation_ecs)
-target_compile_features(aiverse_animation_ecs INTERFACE cxx_std_20)
-target_include_directories(aiverse_animation_ecs INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}" "${CMAKE_CURRENT_SOURCE_DIR}/libraries/include")
-if(NOT EMSCRIPTEN)
-    find_package(Threads REQUIRED)
-    target_link_libraries(aiverse_animation_ecs INTERFACE aiverse_models Threads::Threads)
-else()
-    target_link_libraries(aiverse_animation_ecs INTERFACE aiverse_models)
-endif()
+target_include_directories(aiverse_animation_ecs INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/libraries/include")
+target_link_libraries(aiverse_animation_ecs INTERFACE aiverse_motionweave_core)
 
 # VIVID digital humans (presentation-only facial/runtime and portable GPU morph compute).
 add_subdirectory(engine/character/vivid)
@@ -1144,8 +1147,8 @@ add_library(aiverse_view INTERFACE)
 add_library(AIVERSE::view ALIAS aiverse_view)
 add_library(AIVERSE::View ALIAS aiverse_view)
 target_compile_features(aiverse_view INTERFACE cxx_std_20)
-target_include_directories(aiverse_view INTERFACE "${PROJECT_SOURCE_DIR}" "${PROJECT_SOURCE_DIR}/libraries/include")
-target_link_libraries(aiverse_view INTERFACE AIVERSE::MotionWeave aiverse_shader_graph)
+target_include_directories(aiverse_view INTERFACE "${PROJECT_SOURCE_DIR}")
+target_link_libraries(aiverse_view INTERFACE aiverse_motionweave_core aiverse_shader_graph)
 
 if(AIVERSE_BUILD_TESTS)
     add_executable(aiverse_view_core_tests tests/view/view.cpp)
@@ -1448,11 +1451,8 @@ if(AIVERSE_TEXTURE_WITH_OPENEXR)
     target_link_libraries(aiverse_runtime PUBLIC OpenEXR::OpenEXR)
     target_compile_definitions(aiverse_runtime PUBLIC AIVERSE_TEXTURE_WITH_OPENEXR=1)
 endif()
-# WorldScene.cpp and the public WorldScene/NEREID presentation headers include
-# <aiverselib/water/...>. The header-only package owns its include dirs; an
-# OBJECT runtime must carry that usage requirement on its own target.
-# PUBLIC also propagates it to clients/editor targets using WorldScene.h.
-target_link_libraries(aiverse_runtime PUBLIC AIVERSE::lib_nereid_water)
+# NEREID world headers are engine code (engine/world/nereid): the runtime links no library package.
+
 if(APPLE)
     set_source_files_properties(engine/platform/macos/PlatformMac.mm engine/platform/ios/PlatformIOS.mm
         engine/gfx/metal/GfxMetal.mm engine/platform/apple/PluginsApple.mm PROPERTIES COMPILE_FLAGS "-fobjc-arc")
@@ -1892,7 +1892,7 @@ if(AIVERSE_BUILD_TOOLS AND AIVERSE_DESKTOP)
         apps/modelview/main.cpp apps/modelview/Gallery.cpp
         apps/modelview/NativeScenePreview.cpp
         $<TARGET_OBJECTS:aiverse_runtime>)
-    target_link_libraries(aiverse_modelview PRIVATE aiverse_runtime aiverse_game_view AIVERSE::View)
+    target_link_libraries(aiverse_modelview PRIVATE aiverse_runtime aiverse_game_view AIVERSE::View AIVERSE::libraries)
 endif()
 
 # Catalog preview (docs/packages.md § Web viewer): materials / models of catalog packages through
@@ -1967,9 +1967,6 @@ if(AIVERSE_BUILD_TESTS)
     target_compile_definitions(aiverse_remote_tests PRIVATE AIVERSE_SOURCE_DIR="${CMAKE_CURRENT_SOURCE_DIR}")
     add_test(NAME aiverse_remote_tests COMMAND aiverse_remote_tests)
     add_executable(aiverse_tests tests/tests.cpp)
-    if(MSVC)   # tests.cpp holds thousands of tests: more sections than a default COFF object allows
-        target_compile_options(aiverse_tests PRIVATE /bigobj)
-    endif()
     target_link_libraries(aiverse_tests PRIVATE aiverse_game aiverse_i18n aiverse_pack_writer aiverse_models)
     target_link_libraries(aiverse_tests PRIVATE aiverse_postfx_data)   # postfx agent
     target_link_libraries(aiverse_tests PRIVATE aiverse_game aiverse_game_audio aiverse_audiopack)
@@ -2249,9 +2246,14 @@ endif()
 # icon / launch screen generation (resize, .ico, .icns, Android/iOS/web/Linux sets, previews) used
 # by aiversebuild, the editor core (branding_* / icons_preview / splash_preview) and the tests.
 # ---------------------------------------------------------------------------
-add_library(aiverse_splash STATIC engine/splash/SplashData.cpp engine/splash/SplashScreen.cpp)
+add_library(aiverse_splash STATIC engine/splash/SplashData.cpp engine/splash/SplashScreen.cpp engine/splash/SplashBoot.cpp)
 target_include_directories(aiverse_splash PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 target_link_libraries(aiverse_splash PUBLIC aiverse_engine aiverse_atlas)
+if(AIVERSE_BUILD_TESTS)   # game.json "splash" choices: engine screen, changed, own, none, map loading
+    add_executable(aiverse_splash_choice_tests tests/splash/choice.cpp)
+    target_link_libraries(aiverse_splash_choice_tests PRIVATE aiverse_splash)
+    add_test(NAME splash_choice COMMAND aiverse_splash_choice_tests)
+endif()
 # aiversebuild: window colour before the first frame (0xRRGGBB from game.json splash.background)
 set(AIVERSE_SPLASH_BACKGROUND "" CACHE STRING "Window background before the first frame, 0xRRGGBB (set by aiversebuild)")
 foreach(t ${AIVERSE_GAME_CLIENT_TARGETS})
@@ -2370,8 +2372,7 @@ aiverse_game_module(AIVERSE_GAME_WITH_ENCOUNTERS "Include boss encounters (rules
     engine/game/disabled/Encounters.cpp engine/game/Encounters.cpp engine/game/EncountersApi.cpp)
 # per-map overrides of rules blocks (map "rules": topDown tuning, raid, progression, encounters; docs/game-format.md)
 target_sources(aiverse_game PRIVATE engine/game/MapRules.cpp)
-target_link_libraries(aiverse_game PUBLIC AIVERSE::lib_boss_encounters)
-target_link_libraries(aiverse_game PUBLIC AIVERSE::lib_nereid_buoyancy)   # planet seas (GamePlanets: world body "nereid")
+# boss encounters (engine/mechanics) and planet seas (engine/world/nereid) are engine headers: no library link.
 # map environment (weather, wind, zones, trample fields, auto skills on splines, fog options)
 target_sources(aiverse_game PRIVATE engine/game/Environment.cpp engine/game/EnvironmentData.cpp)
 # driving (agent-gta2): the top-down hero drives vehicles of the vehicle-controllers library (docs/driving.md)
@@ -2932,6 +2933,15 @@ if(AIVERSE_BUILD_TESTS AND TARGET aiverse_world)
     add_test(NAME library_genre COMMAND aiverse_library_genre_tests ${PROJECT_SOURCE_DIR})
 endif()
 
+# Policy packages added 2026-11-22 (nav-links, volume-nav, structure-destruction, portals-rewind,
+# item-affixes, quest-journal, wounds-disease, herds-taming, colonist-relations, utility-networks, railways, ...).
+if(AIVERSE_BUILD_TESTS AND TARGET aiverse_world)
+    add_executable(aiverse_library_policy_mechanics_tests tests/libraries/policy_mechanics_tests.cpp)
+    target_include_directories(aiverse_library_policy_mechanics_tests PRIVATE ${PROJECT_SOURCE_DIR}/tests/libraries)
+    target_link_libraries(aiverse_library_policy_mechanics_tests PRIVATE AIVERSE::mechanics)
+    add_test(NAME library_policy_mechanics COMMAND aiverse_library_policy_mechanics_tests)
+endif()
+
 # boss-encounters (telegraphs, statuses, boss brain, schedule, mob behaviour): tests + headless reference fight.
 if(AIVERSE_BUILD_TESTS)
     add_executable(aiverse_library_encounter_tests tests/libraries/encounter_tests.cpp)
@@ -2961,6 +2971,46 @@ if(AIVERSE_BUILD_TESTS)
     add_executable(aiverse_library_royale_tests tests/libraries/royale_tests.cpp)
     target_link_libraries(aiverse_library_royale_tests PRIVATE AIVERSE::lib_battle_royale)
     add_test(NAME library_royale COMMAND aiverse_library_royale_tests ${PROJECT_SOURCE_DIR})
+endif()
+# Genre library suites that used to run only in CI through tests/libraries/run.py. They check the acceptance
+# criteria of docs/capability-status.json (D1, P3, Q1, Q2, Q5, I1, T1, C2, ...), so ./run-tests.sh must run them.
+if(AIVERSE_BUILD_TESTS)
+    add_executable(aiverse_strategy_library_tests tests/libraries/strategy_tests.cpp)
+    target_link_libraries(aiverse_strategy_library_tests PRIVATE aiverse_engine AIVERSE::libraries)
+    add_test(NAME strategy_libraries COMMAND aiverse_strategy_library_tests)
+    add_executable(aiverse_library_genre_puzzles_tests tests/libraries/genre_puzzles_tests.cpp)
+    add_executable(aiverse_puzzles_example examples/libraries/mechanics/puzzles/PuzzlesExample.cpp)
+    add_executable(aiverse_library_cards_turns_tests tests/libraries/genre_cards_turns_tests.cpp)
+    add_executable(aiverse_cards_turns_example examples/libraries/mechanics/cards-turns/main.cpp)
+    add_executable(aiverse_library_vehicles_sports_tests tests/libraries/genre_vehicles_sports_tests.cpp)
+    add_executable(aiverse_vehicles_sports_example examples/libraries/mechanics/vehicles-sports/VehiclesSportsExample.cpp)
+    add_executable(aiverse_library_genre_production_survival_tests tests/libraries/genre_production_survival_tests.cpp)
+    add_executable(aiverse_library_production_survival_example examples/libraries/mechanics/production-survival/production_survival.cpp)
+    foreach(_aiverse_gt aiverse_library_genre_puzzles_tests aiverse_puzzles_example aiverse_library_cards_turns_tests
+            aiverse_cards_turns_example aiverse_library_vehicles_sports_tests aiverse_vehicles_sports_example
+            aiverse_library_genre_production_survival_tests aiverse_library_production_survival_example)
+        target_link_libraries(${_aiverse_gt} PRIVATE aiverse_engine AIVERSE::gameplay_native)
+    endforeach()
+    add_test(NAME library_genre_puzzles COMMAND aiverse_library_genre_puzzles_tests ${PROJECT_SOURCE_DIR})
+    add_test(NAME library_genre_puzzles_example COMMAND ${CMAKE_COMMAND}
+        -DEXAMPLE=$<TARGET_FILE:aiverse_puzzles_example>
+        -DLEVELS=${PROJECT_SOURCE_DIR}/examples/libraries/mechanics/puzzles/levels.json
+        -P ${PROJECT_SOURCE_DIR}/examples/libraries/mechanics/puzzles/run_twice.cmake)
+    add_test(NAME library_cards_turns COMMAND aiverse_library_cards_turns_tests ${PROJECT_SOURCE_DIR})
+    add_test(NAME library_cards_turns_example COMMAND aiverse_cards_turns_example ${PROJECT_SOURCE_DIR}/examples/libraries/mechanics/cards-turns 7)
+    set_tests_properties(library_cards_turns_example PROPERTIES PASS_REGULAR_EXPRESSION "deterministic replay: identical, winners: yes")
+    add_test(NAME library_vehicles_sports COMMAND aiverse_library_vehicles_sports_tests ${PROJECT_SOURCE_DIR})
+    add_test(NAME library_vehicles_sports_example COMMAND ${CMAKE_COMMAND}
+        -DEXAMPLE=$<TARGET_FILE:aiverse_vehicles_sports_example>
+        -DDATA=${PROJECT_SOURCE_DIR}/examples/libraries/mechanics/vehicles-sports
+        -P ${PROJECT_SOURCE_DIR}/tests/libraries/vehicles_sports_example.cmake)
+    add_test(NAME library_genre_production_survival COMMAND aiverse_library_genre_production_survival_tests ${PROJECT_SOURCE_DIR})
+    add_test(NAME library_production_survival_example COMMAND aiverse_library_production_survival_example
+        ${PROJECT_SOURCE_DIR}/examples/libraries/mechanics/production-survival --quiet)
+endif()
+# docs/capability-status.json stays honest: libraries exist, listed tests run here, "core" areas name their tests.
+if(AIVERSE_BUILD_TESTS AND Python3_EXECUTABLE)
+    add_test(NAME genre_registry COMMAND ${Python3_EXECUTABLE} ${PROJECT_SOURCE_DIR}/tools/genre/check_registry.py ${PROJECT_SOURCE_DIR})
 endif()
 if(AIVERSE_BUILD_TESTS OR AIVERSE_BUILD_TOOLS)
     add_executable(aiverse_encounter tools/libraries/encounter_main.cpp)
@@ -4399,7 +4449,7 @@ if(AIVERSE_BUILD_TESTS AND AIVERSE_ENABLE_PHYSICS AND
         tests/physis_terraweave_fall_bridge_test.cpp)
     # TerraWeaveEcsAuthority.h transitively reads the NEREID shoreline
     # policy through TerraWeaveNereidSoilBridge.h. AIVERSE::lib_nereid_water
-    # exports libraries/include for <aiverselib/water/NereidErosion.h>.
+    # exports libraries/include for "engine/world/nereid/NereidErosion.h".
     # Do not compensate with a global compiler include path.
     target_link_libraries(aiverse_physis_terraweave_fall_bridge_test PRIVATE
         aiverse_engine aiverse_physics aiverse_models aiverse_zstd_dec

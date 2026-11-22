@@ -2362,7 +2362,7 @@
    ],
    "roadmap": [
     {
-     "status": "in-progress",
+     "status": "done", "date": "2026-11-23",
      "target": null,
      "title": "Один экран загрузки во всех проектах",
      "titleEn": "One loading screen in every project",
@@ -2492,7 +2492,7 @@
    ],
    "roadmap": [
     {
-     "status": "in-progress",
+     "status": "done", "date": "2026-11-23",
      "target": null,
      "title": "Новые движения персонажа",
      "titleEn": "New character moves",
@@ -2500,7 +2500,7 @@
      "textEn": "Dash with air charges, wall run and slide, grapple (pull and swing), glide and dropping through one-way platforms in the shared movement machine. Done in a branch, waiting for the merge into main."
     },
     {
-     "status": "in-progress",
+     "status": "done", "date": "2026-11-23",
      "target": null,
      "title": "Новые движения в FPS с предсказанием",
      "titleEn": "New moves in the FPS with prediction",
@@ -2508,7 +2508,7 @@
      "textEn": "A rules \"locomotion\" block moves characters through the movement machine; the client predicts the modes and reconciles with the server, saves and checksums change only with the block."
     },
     {
-     "status": "in-progress",
+     "status": "done", "date": "2026-11-23",
      "target": null,
      "title": "Пакеты для пробелов реестра возможностей",
      "titleEn": "Packages for the capability gaps",

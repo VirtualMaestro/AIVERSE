@@ -1,6 +1,6 @@
-#include <aiverselib/gameplay/Diagnostics.h>
-#include <aiverselib/gameplay/Input.h>
-#include <aiverselib/gameplay/Camera.h>
+#include "engine/gameplay/Diagnostics.h"
+#include "engine/gameplay/Input.h"
+#include "engine/gameplay/Camera.h"
 #include <aiverselib/gameplay/Configured.h>
 #include <aiverselib/gameplay/Squads.h>
 #include <aiverselib/gameplay/Feedback.h>

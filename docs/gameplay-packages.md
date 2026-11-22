@@ -54,7 +54,7 @@ target_link_libraries(aiverse_native_my_game PRIVATE AIVERSE::gameplay_native)
 
 Источник: `libraries/spec/gameplay.json`. Генерируются:
 
-- `libraries/include/aiverselib/gameplay/Configuration.h` — типы и строгий loader;
+- `engine/gameplay/Configuration.h` — типы и строгий loader;
 - `libraries/spec/gameplay.schema.json` — схема для внешних редакторов/AI;
 - `docs/gameplay-settings.md` — поля, диапазоны и значения по умолчанию.
 

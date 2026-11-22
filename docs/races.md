@@ -1,7 +1,7 @@
 # Races
 
 A race is a capability of any project, not a genre: a map with a `"race"` block makes the map's cars race, in
-whichever module hosts the cars. One data format, one simulation (`libraries/include/aiverselib/mechanics/RaceSession.h`,
+whichever module hosts the cars. One data format, one simulation (`engine/mechanics/RaceSession.h`,
 data `mechanics/RaceSessionData.h`), one HUD (`engine/ui/RaceHud.h`), one chase camera (`engine/render/ChaseCamera.h`).
 Skill: `skills/gameplay/aiverse-racing`.
 

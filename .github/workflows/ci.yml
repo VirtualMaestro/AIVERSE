@@ -23,6 +23,15 @@ env:
   CTEST_GPU_LABELS: '^(GPU|METAL|Metal|MetalGPU)$'
 
 jobs:
+  # ---------------------------------------------------------------- Layers (no build)
+  layers:
+    name: Layer dependencies
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: engine < libraries < modules < apps (docs/architecture-layers.md)
+        run: python3 tools/layers/check_layers.py
+
   # ---------------------------------------------------------------- Linux
   linux:
     name: Linux ${{ matrix.arch }} ${{ matrix.cc }}
