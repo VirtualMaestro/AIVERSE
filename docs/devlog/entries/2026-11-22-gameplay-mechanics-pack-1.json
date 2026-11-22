@@ -4,8 +4,8 @@
   "system": "gameplay",
   "title": "Тринадцать новых механик: паркур, разрушения, порталы, квесты, болезни, поезда",
   "titleEn": "Thirteen new mechanics: parkour, destruction, portals, quests, diseases, trains",
-  "summary": "Бег по стене, рывок, крюк-кошка и планирование; камера от третьего лица с обходом стен; прыжки и лестницы в навигации ботов и полёт в 3D; рушащиеся постройки; порталы и перемотка времени; аффиксы предметов, квесты, раны и болезни, стада и приручение, отношения колонистов, трубы, тепло и железные дороги.",
-  "summaryEn": "Wall-running, dashes, a grappling hook and gliding; a third-person camera that avoids walls; jumps and ladders in bot navigation and flight in 3D; collapsing buildings; portals and time rewind; item affixes, quests, wounds and diseases, herds and taming, colonist relationships, pipes, heat and railways.",
+  "summary": "Бег по стене, рывок, крюк-кошка и планирование; камера от третьего лица с обходом стен; прыжки и лестницы у ботов, полёт в 3D; рушащиеся постройки, порталы, перемотка времени; аффиксы, квесты, раны и болезни, приручение, отношения колонистов, трубы, тепло и железные дороги.",
+  "summaryEn": "Wall-running, dashes, a grappling hook and gliding; a third-person camera that avoids walls; bot jumps, ladders and 3D flight; collapsing buildings, portals, time rewind; item affixes, quests, wounds and diseases, taming, colonist relationships, pipes, heat and railways.",
   "body": [
     "Персонаж теперь умеет бежать по стене, соскальзывать по ней и отталкиваться прыжком, делать рывок с зарядами в воздухе, цепляться крюком-кошкой, планировать и спрыгивать сквозь односторонние платформы. Камера от третьего лица держится за плечом, придвигается, когда сзади стена, и плавно меняет профиль при прицеливании или в машине.",
     "Боты строят путь с прыжками, спрыгиваниями, лестницами, дверями и телепортами, а укрытия вокруг ящиков и стен находятся сами. Для летающих и кораблей есть путь в свободном 3D-пространстве, избегание в стае и строй в трёх измерениях.",
@@ -27,6 +27,10 @@
   "commit": null,
   "media": [],
   "links": [
-    {"title": "Пакеты механик", "titleEn": "Mechanics packages", "href": "docs/mechanics-packages.md"}
+    {
+      "title": "Пакеты механик",
+      "titleEn": "Mechanics packages",
+      "href": "docs/mechanics-packages.md"
+    }
   ]
 }

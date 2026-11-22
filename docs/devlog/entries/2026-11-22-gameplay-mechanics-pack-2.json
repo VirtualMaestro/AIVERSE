@@ -4,8 +4,8 @@
   "system": "gameplay",
   "title": "Ещё десять механик: город, транспорт, тактика, дипломатия, герои, корабли, тайные карты, речь и тач",
   "titleEn": "Ten more mechanics: city, transit, tactics, diplomacy, heroes, ships, secret cards, speech and touch",
-  "summary": "Градостроительная экономика с выборами, общественный транспорт по расписанию, многоэтажная тактика, дипломатия с ИИ, бот, который объясняет свой ход, драфт и магазин для матчей героев, корабли из блоков и самолёты, скрытые карты без утечек, движение губ по речи и тач-управление с настройками доступности.",
-  "summaryEn": "A city economy with elections, scheduled public transport, multi-storey tactics, diplomacy with AI, a bot that explains its move, draft and shop for hero matches, block-built ships and aircraft, hidden cards without leaks, lips that follow speech, and touch controls with accessibility settings.",
+  "summary": "Градостроительная экономика с выборами, транспорт по расписанию, многоэтажная тактика, дипломатия с ИИ, бот, объясняющий ход, драфт и магазин для матчей героев, корабли из блоков и самолёты, скрытые карты без утечек, губы по речи и тач-управление с доступностью.",
+  "summaryEn": "A city economy with elections, scheduled transport, multi-storey tactics, diplomacy with AI, a bot that explains its move, draft and shop for hero matches, block-built ships and aircraft, hidden cards without leaks, lips that follow speech, and accessible touch controls.",
   "body": [
     "Город растёт по спросу: жилые, торговые и промышленные участки поднимаются уровнем, когда хватает работы и людей, службы покрывают кварталы, налоги и содержание сводятся в бюджет с займами, а фракции голосуют на выборах. Автобусы, трамваи и грузовые линии ходят по расписанию, пассажиры строят путь с пересадками, а перегруженные остановки видны сразу.",
     "Тактика поднялась на этажи: лестницы и люки соединяют уровни, перекрытия закрывают обзор, высота даёт бонус к попаданию, а план хода можно отменять шаг за шагом. Державы ведут дипломатию: отношения, договоры, перемирия, союзники, которые вступают в войну, и ИИ, который решает, мириться или вооружаться. Для любой пошаговой игры есть бот с поиском, который показывает, почему выбрал ход.",
@@ -27,6 +27,10 @@
   "commit": null,
   "media": [],
   "links": [
-    {"title": "Пакеты механик", "titleEn": "Mechanics packages", "href": "docs/mechanics-packages.md"}
+    {
+      "title": "Пакеты механик",
+      "titleEn": "Mechanics packages",
+      "href": "docs/mechanics-packages.md"
+    }
   ]
 }
