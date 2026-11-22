@@ -218,6 +218,23 @@
   };
   window.onerror = function () { fail(L.error); };
 })();
+
+  // Phones: one finger orbits (the engine's touch drag), two fingers pinch to zoom. Two-finger touches
+  // are taken here in the capture phase, so the orbit does not jump when the second finger lands.
+  (function () {
+    var cv = document.getElementById('canvas'), d0 = 0;
+    function dist(t) { var x = t[0].clientX - t[1].clientX, y = t[0].clientY - t[1].clientY; return Math.sqrt(x * x + y * y); }
+    function pinch(e) {
+      if (e.target !== cv || e.touches.length < 2) { d0 = 0; return; }
+      e.preventDefault(); e.stopPropagation();
+      var d = dist(e.touches);
+      if (d0 > 0 && Module._cv_zoom) Module._cv_zoom(d / d0);
+      d0 = d;
+    }
+    window.addEventListener('touchstart', pinch, { capture: true, passive: false });
+    window.addEventListener('touchmove', pinch, { capture: true, passive: false });
+    window.addEventListener('touchend', function (e) { if (e.touches.length < 2) d0 = 0; }, { capture: true });
+  })();
 </script>
 {{{ SCRIPT }}}
 </body>

@@ -415,6 +415,8 @@ struct App {
         auto next = loadModel(path(it.getStr("model")), readFile, &warn);
         for (auto& w : warn) log(w);
         if (!next) { log("cannot load " + it.getStr("model")); return; }
+        // the camera alone picks the LOD on screen; the shadow map (fixed to the model bounds) picks its own
+        next->batching.independentShadowLod = true;
         prepareModelUpload(*next);
         wireData.build(*next);   // the CPU geometry is released by the upload
         shownLevel = -1;
@@ -625,6 +627,13 @@ CV_EXPORT void cv_lod(int level) {
     if (!g_app) return;
     if (!g_app->dev) { g_app->lod = level; return; }
     g_app->setLod(level);
+}
+// Pinch zoom from the page (two-finger gestures never reach the orbit drag): factor > 1 moves closer.
+CV_EXPORT void cv_zoom(float factor) {
+    if (!g_app || !(factor > 0.f)) return;
+    g_app->cam.distance = std::clamp(g_app->cam.distance / factor, g_app->cam.minDistance, g_app->cam.maxDistance);
+    g_app->autoRotate = false;
+    g_app->idle = 0;
 }
 CV_EXPORT void cv_wire(int on) {
     if (!g_app) return;
