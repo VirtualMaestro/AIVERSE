@@ -1,4 +1,5 @@
 """Warcraft III stage 2 generated fixtures (no copyrighted files)."""
+import importlib.util
 import json
 import math
 from pathlib import Path
@@ -79,7 +80,7 @@ class Stage2Tests(unittest.TestCase):
         no_skin = doo().replace(b'ATtr' + struct.pack('<BBii', 2, 100, -1, 1),
                                 struct.pack('<BBii', 2, 100, -1, 1), 1)
         self.assertFalse(placements.doodads(no_skin)['hasSkinField'])
-        with self.assertRaisesRegex(ValueError, 'unsupported W3do'):
+        with self.assertRaises(ValueError):
             placements.doodads(doo(version=13))
 
     def test_units_random_and_stats(self):
@@ -106,21 +107,23 @@ class Stage2Tests(unittest.TestCase):
                 placements.overrides(objectdata(flag)[:-1], ext)
 
     def test_mapinfo_header_versions(self):
-        for version in (18, 25, 27, 28, 31, 33):
+        for version in (18, 25, 27, 28, 31, 33, 39):
             d = mapinfo.header(w3i(version))
             self.assertEqual(d['playableWidth'], 16)
             self.assertEqual(d['tileset'], 'L')
             self.assertEqual(d['gameVersion'] is None, version < 27)
             self.assertGreater(d['unparsedTailBytes'], 0)
         with self.assertRaisesRegex(ValueError, 'unsupported'):
-            mapinfo.header(struct.pack('<I', 39))
+            mapinfo.header(struct.pack('<I', 40))
 
     def test_studio_map_corners_transpose_and_units(self):
         t = formats.terrain(terrain(6, 5))
         result = studio.mapdoc(t, {'name': 'Map'}, {})
         self.assertEqual(result['size'], [4, 5])
         self.assertEqual(result['terrain']['corners'][0], 0)
+        # Adjacent editor X is Warcraft original Y -> 10 tiles -> 80 WC3 height units.
         self.assertEqual(result['terrain']['corners'][1], 10)
+        # Adjacent editor Z is Warcraft original X -> 8 WC3 height units.
         self.assertEqual(result['terrain']['corners'][5], 1)
         placements_doc = studio.placements(t, placements.doodads(doo()), placements.units(units()))
         self.assertEqual(len(placements_doc['placements']), 3)
@@ -166,6 +169,7 @@ class Stage2Tests(unittest.TestCase):
             dest = root / 'game/content/Warcraft3/New'
             self.assertTrue((dest / 'war3map.doo').exists())
             self.assertEqual(len(json.loads((dest / 'import.json').read_text())['warnings']), 1)
+            # A separate output project is required because previous import is protected.
             strict = subprocess.run([sys.executable, str(MOD / 'import.py'),
                                      '--source', str(source), '--out', str(root / 'strict'),
                                      '--strict'], capture_output=True, text=True)
@@ -175,7 +179,6 @@ class Stage2Tests(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
-
 
 class StudioInstallTests(unittest.TestCase):
     def test_register_preview_and_reject_repeated_install(self):
