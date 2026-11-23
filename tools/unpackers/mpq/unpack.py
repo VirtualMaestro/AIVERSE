@@ -27,8 +27,10 @@ KNOWN = (
     'war3map.w3a', 'war3map.w3q', 'war3map.w3h', 'war3map.w3r',
     'war3map.w3c', 'war3map.w3s', 'war3map.imp', 'war3map.mmp',
     'war3mapMap.blp', 'war3mapMap.tga', 'war3mapPreview.tga',
-    'war3mapPath.tga', 'war3mapMisc.txt', 'war3mapSkin.txt',
-    'war3mapExtra.txt', '(attributes)', '(signature)',
+    'war3mapPath.tga', 'war3map.w3l', 'war3map.w3grp', 'war3mapMisc.txt', 'war3mapSkin.txt',
+    'war3mapExtra.txt', 'war3mapSkin.w3u', 'war3mapSkin.w3a',
+    'war3mapSkin.w3b', 'war3mapSkin.w3d', 'war3mapSkin.w3h',
+    'war3mapSkin.w3q', 'war3mapSkin.w3t', '(attributes)', '(signature)',
 )
 
 
