@@ -109,8 +109,8 @@ class Stage3Tests(unittest.TestCase):
             self.assertEqual(report['unresolvedCount'], 1)  # random uDNR lacks a model
             self.assertEqual(len(report['types']), 2)
             self.assertEqual(len(report['copyPlan']), 2)
-            self.assertIn('wc3_unit_68666f6f', report['types'])
-            self.assertIn('wc3_doodad_41547472', report['types'])
+            self.assertIn('wc3_Fixture_unit_68666f6f', report['types'])
+            self.assertIn('wc3_Fixture_doodad_41547472', report['types'])
             (gd / 'README').write_text('not imported')
             command = [sys.executable, str(IMPORT / 'install_scene.py'), '--project', str(project),
                        '--imported', str(imported), '--game-data', str(gd)]
@@ -126,11 +126,22 @@ class Stage3Tests(unittest.TestCase):
             self.assertIn('warcraft3_Fixture.json', rules['include'])
             newtypes = json.loads((project / 'warcraft3_Fixture.json').read_text())['types']
             self.assertIn('content/Warcraft3/Fixture/_game/Units/Human/Footman/Footman.mdx',
-                          newtypes['wc3_unit_68666f6f']['view']['model'])
+                          newtypes['wc3_Fixture_unit_68666f6f']['view']['model'])
             self.assertTrue((imported / '_game/Textures/Footman.blp').exists())
             repeat = subprocess.run(command, text=True, capture_output=True)
             self.assertEqual(repeat.returncode, 2)
             self.assertEqual(len(json.loads((project / 'game.json').read_text())['maps']), 1)
+
+    def test_cross_map_type_ids_differ(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            project, imported = make_project(root)
+            second = imported.parent / 'Second'
+            import shutil
+            shutil.copytree(imported, second)
+            a = resolve(imported, model_map={'ATtr': 'MyModels/tree.mdx'})
+            b = resolve(second, model_map={'ATtr': 'MyModels/tree.mdx'})
+            self.assertNotEqual(set(a['types']), set(b['types']))
 
     def test_strict_refuses_unresolved_without_changes(self):
         with tempfile.TemporaryDirectory() as tmp:
