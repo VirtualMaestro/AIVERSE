@@ -41,8 +41,8 @@ def _header(r):
     if r.tag() != 'W3do':
         raise ValueError('expected W3do header')
     version, subversion = r.unpack('II')
-    if (version, subversion) != (8, 11):
-        raise ValueError('unsupported W3do version %d/%d (expected 8/11)' % (version, subversion))
+    if (version, subversion) not in ((8, 11), (13, 11)):
+        raise ValueError('unsupported W3do version %d/%d (doodad 8/11 or 13/11)' % (version, subversion))
     return version, subversion
 
 
@@ -56,15 +56,18 @@ def _read_doodads(data, skin_field):
         angle, = _vector(r, 1)
         scale = _vector(r, 3)
         skin = r.tag() if skin_field else None
+        v13_color = r.u32() if version == 13 else None
         flags, life = r.unpack('BB')
         table_ptr = r.unpack('i')[0]
         item_sets = _items(r)
         creation = r.unpack('i')[0]
+        v13_tail = list(r.unpack('4i')) if version == 13 else None
         result.append({'typeId': type_id, 'skinId': skin, 'variation': variation,
                        'positionWar3': position, 'angleRadians': angle,
                        'scaleWar3': scale, 'flags': flags, 'lifePercent': life,
                        'itemTablePointer': table_ptr, 'itemSets': item_sets,
-                       'creationId': creation})
+                       'creationId': creation, 'v13ColorRaw': v13_color,
+                       'v13TailRaw': v13_tail})
     special_format, = r.unpack('i')
     specials = []
     for _ in range(_count(r, 'special doodads')):
@@ -83,7 +86,7 @@ def doodads(data):
     # Classic 8/11 maps can omit the 4-byte skin rawcode. Both byte layouts
     # exist, and must be checked by completing all records to EOF.
     errors = []
-    for skin_field in (True, False):
+    for skin_field in ((True,) if data[4:8] == struct.pack('<I', 13) else (True, False)):
         try:
             return _read_doodads(data, skin_field)
         except ValueError as ex:
@@ -94,6 +97,8 @@ def doodads(data):
 def units(data):
     r = Reader(data)
     version, subversion = _header(r)
+    if version != 8:
+        raise ValueError('v13 unit placement requires populated fixtures; source retained unmodified')
     result = []
     for _ in range(_count(r, 'units')):
         type_id, variation = r.tag(), r.unpack('i')[0]
