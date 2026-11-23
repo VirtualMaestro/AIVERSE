@@ -77,7 +77,7 @@ def run(argv=None):
         target = root / 'content' / 'Warcraft3' / slug
         if source.is_dir() and source.suffix.lower() not in ('.w3x', '.w3m'):
             raise ValueError('unpacked map folder must end in .w3x or .w3m')
-        if source.is_dir() and (root == source or root.is_relative_to(source)):
+        if source.is_dir() and (root == source or source in root.parents):
             raise ValueError('project output must not be inside unpacked source folder')
         if target.exists():
             raise ValueError('target already exists (will not overwrite): ' + str(target))
