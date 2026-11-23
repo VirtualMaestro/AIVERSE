@@ -93,3 +93,55 @@ python3 -m unittest discover -s tests/tools -p test_warcraft3_import.py -v
 Tests use generated W3E v11 and v12, WPM, WTS, IMP, bad-size cases,
 archive signature checks, an unpacked folder, and overwrite protection.
 A real StormLib/MPQ integration acceptance test is still required.
+
+## Stage 2: map metadata, units, doodads, object overrides and Studio preview
+
+The importer additionally parses:
+
+- `war3map.w3i` -> `mapinfo.json`: header versions 18 and 23–33 (map name,
+  author, dimensions, tileset, camera bounds). The later player/force/fog and
+  trigger tables remain in the original file and are **not** represented as decoded records.
+- `war3map.doo` -> `doodads.json`: placement records (8/11, both older no-skin
+  and skin-aware layouts), including variation, transforms, flags, item drops
+  and special cliff doodads.
+- `war3mapUnits.doo` -> `units.json`: placement records (8/11), owner,
+  HP/mana overrides, abilities, inventory, hero stats and random unit groups.
+- `war3map.w3u/.w3t/.w3b/.w3d/.w3a/.w3h/.w3q` -> `objects_<ext>.json`:
+  typed v1/v2 object modifications and raw metadata field IDs. This is not
+  yet an SLK-merged or AIVERSE gameplay-ready definition.
+- `placements.json`: transformed Warcraft object coordinates and creation IDs;
+  **not yet live ECS entities**.
+- `studio-map.json`: transposed W3E heightfield using AIVERSE's existing MapDoc
+  `terrain.corners` representation (signed 1/16 of a map unit). This preview
+  is not native Warcraft splat/cliff/water rendering.
+
+To register an imported terrain preview in an **existing** AIVERSE project:
+
+```bash
+python3 tools/importers/warcraft3/install_map.py \
+  --project /path/to/project \
+  --imported /path/to/project/content/Warcraft3/MyMap
+```
+
+The installer refuses to overwrite a map or register the same map twice.
+It adds `maps/warcraft3_MyMap.json` and a `maps` entry to `game.json`, so
+Studio's Project panel can open the map. The destination project must already
+have a valid `game.json` and map support. Set native rules `terrain.model` to
+`heightfield` where needed; the installer deliberately does not modify rules.
+Import the map into Assets first; register the preview only if desired.
+
+**Unsupported layouts** (notably Warcraft III 3.0 doodad/unit v13) retain
+their original binary files and write a warning to `import.json`. Use
+`import.py --strict` to fail rather than skip unrecognized decoded formats.
+No real Warcraft III archive or Studio runtime has been exercised yet.
+
+Acceptance command (synthetic fixture validation):
+
+```bash
+python3 -m unittest discover -s tests/tools -p 'test_warcraft3*.py' -v
+```
+
+Next: implement the missing game-version layouts and actual model/SLK mapping;
+instantiate game objects via native ECS, bind water through NEREID and vegetation
+through TerraWeave, and visually verify the map with a legitimately supplied
+Warcraft III map in Studio.
