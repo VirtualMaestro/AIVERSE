@@ -141,9 +141,10 @@ def install(project, payloads, copies):
             for rel in newfiles:
                 target = _within(root, rel)
                 target.parent.mkdir(parents=True, exist_ok=True)
-                with target.open('xb') as dst, (stage / rel).open('rb') as src:
-                    shutil.copyfileobj(src, dst)
-                created.append(target)
+                with target.open('xb') as dst:
+                    created.append(target)  # cleanup even if copying this file fails
+                    with (stage / rel).open('rb') as src:
+                        shutil.copyfileobj(src, dst)
             for rel in sorted(old_paths, key=lambda p: p == 'game.json'):
                 target = _within(root, rel)
                 os.replace(str(stage / rel), str(target))
