@@ -11,7 +11,7 @@
   ],
   "capabilities": ["probe", "list", "extract"],
   "external": true,
-  "license": "MIT (StormLib, external runtime dependency)",
+  "license": "MIT",
   "command": ["python3", "unpack.py"],
   "command_windows": ["py", "-3", "unpack.py"]
 }
