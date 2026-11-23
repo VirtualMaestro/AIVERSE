@@ -109,16 +109,35 @@ def pathing(data):
 
 
 def strings(data):
+    """Parse WTS values without losing embedded braces, comments or indentation."""
     text = data.decode('utf-8-sig', 'replace')
-    # WTS contains STRING n followed by a brace-delimited value. No nested blocks.
-    pattern = re.compile(r'(?im)^\s*STRING\s+(\d+)\s*\{([^}]*)\}')
-    out = {}
-    for match in pattern.finditer(text):
+    lines = text.splitlines(keepends=True)
+    header = re.compile(r'^\s*STRING\s+(\d+)\s*$', re.I)
+    opening = re.compile(r'^\s*\{\s*$')
+    closing = re.compile(r'^\s*\}\s*$')
+    result = {}
+    i = 0
+    while i < len(lines):
+        match = header.fullmatch(lines[i].rstrip('\r\n'))
+        if not match:
+            i += 1
+            continue
         key = 'TRIGSTR_%03d' % int(match.group(1))
-        if key in out:
+        if key in result:
             raise ValueError('duplicate WTS key ' + key)
-        out[key] = match.group(2).strip('\r\n')
-    return {'format': 'warcraft3.wts', 'strings': out}
+        i += 1
+        if i >= len(lines) or not opening.fullmatch(lines[i].rstrip('\r\n')):
+            raise ValueError('missing opening WTS brace: ' + key)
+        i += 1
+        values = []
+        while i < len(lines) and not closing.fullmatch(lines[i].rstrip('\r\n')):
+            values.append(lines[i])
+            i += 1
+        if i >= len(lines):
+            raise ValueError('unterminated WTS value: ' + key)
+        result[key] = ''.join(values).rstrip('\r\n')
+        i += 1
+    return {'format': 'warcraft3.wts', 'strings': result}
 
 
 def imported(data):
