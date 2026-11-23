@@ -2252,6 +2252,24 @@
    "taglineEn": "Moving a project from another engine",
    "essence": "Импортёр переносит сцены, префабы, модели, частицы и анимации; остальное попадает в отчёт для агента.",
    "essenceEn": "The importer moves scenes, prefabs, models, particles and animations; the rest goes into a report for an agent.",
+   "roadmap": [
+    {
+     "status": "in-progress",
+     "target": null,
+     "title": "Чтение карт Warcraft III",
+     "titleEn": "Warcraft III map import",
+     "text": "Архивы MPQ, высоты, объекты и размещение на карте; предпросмотр рельефа в Studio. Интеграция игровых объектов и проверка на реальных картах ещё в работе.",
+     "textEn": "MPQ archives, heights, objects and placements; Studio terrain preview. Game object integration and real-map verification remain in progress."
+    },
+    {
+     "status": "planned",
+     "target": null,
+     "title": "Перенос игровых объектов Warcraft III в ECS",
+     "titleEn": "Warcraft III objects to native ECS",
+     "text": "Соответствие ID моделей, материалов, правил, вода и растительность через действующие системы движка.",
+     "textEn": "Map object IDs to models, materials and native rules; reuse existing water and foliage systems."
+    }
+   ],
    "includes": [
     {
      "name": "Сцены и префабы",
