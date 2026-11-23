@@ -1401,7 +1401,7 @@
       "package": "construction",
       "path": "skills/gameplay/aiverse-construction/SKILL.md",
       "domain": "gameplay",
-      "summary": "Placement checks, resource explanations, refunds and native construction commands",
+      "summary": "Construction grids, placement checks, resource explanations, refunds and native construction commands",
       "side": "simulation",
       "runtime": "header",
       "target": "AIVERSE::lib_construction",

@@ -2126,7 +2126,7 @@ if(NOT MSVC)
 endif()
 
 add_library(aiverse_ui STATIC engine/ui/UiLayer.cpp engine/ui/UiRender.cpp engine/ui/UiFont.cpp engine/ui/UiStb.cpp engine/ui/UiKeyboard.cpp engine/ui/UiLua.cpp
-    engine/ui/UiLinear.cpp)   # linear UI blending (ui-linear)
+    engine/ui/UiLinear.cpp engine/ui/UiModelView.cpp)   # linear UI blending (ui-linear)
 target_include_directories(aiverse_ui PUBLIC ${CMAKE_CURRENT_SOURCE_DIR} PRIVATE third_party/stb)
 target_link_libraries(aiverse_ui PUBLIC aiverse_rmlui aiverse_rmlui_lua aiverse_lua aiverse_engine)
 option(AIVERSE_CLIENT_WITH_FX "Include SpectraFX particles in packaged clients" ON)
