@@ -5242,3 +5242,17 @@ if(AIVERSE_BUILD_TESTS)
         add_dependencies(aiverse_physis_tests aiversemcp)
     endif()
 endif()
+
+# Warcraft III source importer: no game data or StormLib is required for these
+# synthetic format/parser/map-writer acceptance cases. Native integration is a
+# separate acceptance gate when a licensed Warcraft III map is available.
+if(AIVERSE_BUILD_TESTS)
+    find_package(Python3 COMPONENTS Interpreter QUIET)
+    if(Python3_Interpreter_FOUND)
+        add_test(NAME warcraft3_importer_python
+            COMMAND ${Python3_EXECUTABLE} -m unittest discover
+                -s ${CMAKE_CURRENT_SOURCE_DIR}/tests/tools
+                -p "test_warcraft3*.py" -v)
+        set_tests_properties(warcraft3_importer_python PROPERTIES LABELS "TOOLS;IMPORT")
+    endif()
+endif()
