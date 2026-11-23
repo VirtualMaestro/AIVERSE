@@ -175,3 +175,25 @@ class Stage2Tests(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
+
+
+class StudioInstallTests(unittest.TestCase):
+    def test_register_preview_and_reject_repeated_install(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            imported = root / 'content/Warcraft3/Example'
+            imported.mkdir(parents=True)
+            (root / 'game.json').write_text(json.dumps({'name': 'example', 'maps': []}))
+            (imported / 'studio-map.json').write_text(json.dumps({
+                'name': 'Custom map', 'size': [4, 4],
+                'terrain': {'corners': [0]*25},
+                'warcraft3': {'previewOnly': True}}))
+            cmd = [sys.executable, str(MOD / 'install_map.py'), '--project', str(root),
+                   '--imported', str(imported)]
+            first = subprocess.run(cmd, capture_output=True, text=True)
+            self.assertEqual(first.returncode, 0, first.stdout)
+            self.assertTrue((root / 'maps/warcraft3_Example.json').is_file())
+            self.assertEqual(json.loads((root / 'game.json').read_text())['maps'][0]['title'], 'Custom map')
+            second = subprocess.run(cmd, capture_output=True, text=True)
+            self.assertEqual(second.returncode, 2)
+            self.assertEqual(len(json.loads((root / 'game.json').read_text())['maps']), 1)
