@@ -10,8 +10,8 @@ from formats import Reader
 def header(data):
     r = Reader(data)
     version = r.u32()
-    if version not in (18, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33):
-        raise ValueError('unsupported W3I version %d (header supports 18/23-33)' % version)
+    if version not in (18, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 39):
+        raise ValueError('unsupported W3I version %d (header supports 18/23-33/39)' % version)
     saves, editor_version = r.unpack('II')
     game_version = list(r.unpack('IIII')) if version >= 27 else None
     name = r.cstring(109)
