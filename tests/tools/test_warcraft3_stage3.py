@@ -55,6 +55,21 @@ def make_project(root, with_model=True):
 
 
 class Stage3Tests(unittest.TestCase):
+    def test_one_command_import_assets_only(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            source = root / 'NewMap.w3x'
+            source.mkdir()
+            (source / 'war3map.w3e').write_bytes(terrain(6, 5))
+            game = root / 'game'
+            game.mkdir()
+            proc = subprocess.run([sys.executable, str(IMPORT / 'cli.py'),
+                                   '--source', str(source), '--project', str(game),
+                                   '--assets-only'], text=True, capture_output=True)
+            self.assertEqual(proc.returncode, 0, proc.stdout + proc.stderr)
+            self.assertEqual(json.loads(proc.stdout)['phase'], 'assets')
+            self.assertTrue((game / 'content/Warcraft3/NewMap/studio-map.json').exists())
+
     def test_reforged_skin_model_reference(self):
         parsed = skin_rows(b'[hfoo]\nfile=Units\\Human\\Footman\\HD.mdx\n'
                            b'[hrif]\nfile=Units\\Human\\Rifleman.mdx\n')
