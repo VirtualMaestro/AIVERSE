@@ -21,6 +21,9 @@ HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
 sys.path.insert(0, str(HERE.parents[1] / 'unpackers' / 'mpq'))
 import formats as wc3  # noqa: E402
+import placements as wc3_place  # noqa: E402
+import mapinfo as wc3_info  # noqa: E402
+import studio as wc3_studio  # noqa: E402
 from unpack import Archive, MAX_FILE, MAX_ENTRIES, probe, valid_name  # noqa: E402
 
 
@@ -64,6 +67,8 @@ def run(argv=None):
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument('--source', type=Path, required=True)
     ap.add_argument('--out', type=Path, required=True, help='existing AIVERSE project root')
+    ap.add_argument('--strict', action='store_true',
+                    help='abort import on any unsupported or malformed decoded file')
     args = ap.parse_args(argv)
     try:
         source = args.source.expanduser().resolve()
@@ -72,6 +77,8 @@ def run(argv=None):
         target = root / 'content' / 'Warcraft3' / slug
         if source.is_dir() and source.suffix.lower() not in ('.w3x', '.w3m'):
             raise ValueError('unpacked map folder must end in .w3x or .w3m')
+        if source.is_dir() and (root == source or root.is_relative_to(source)):
+            raise ValueError('project output must not be inside unpacked source folder')
         if target.exists():
             raise ValueError('target already exists (will not overwrite): ' + str(target))
         target.parent.mkdir(parents=True, exist_ok=True)
@@ -79,9 +86,10 @@ def run(argv=None):
             stage = Path(tmp)
             seen = set()
             decoded_files = {}
+            decoded_raw = {}
             total = 0
             result = {'format': 'aiverse.warcraft3.import.v1', 'sourceName': source.name,
-                      'external': True, 'files': [], 'decoded': {},
+                      'external': True, 'files': [], 'decoded': {}, 'warnings': [],
                       'limitations': ['Imported resources are not automatically placed in an ECS scene',
                                       'Terrain JSON is source data, not a TerraWeave world']}
             for rel, data in source_items(source):
@@ -100,19 +108,54 @@ def run(argv=None):
                 dst.write_bytes(data)
                 result['files'].append({'path': norm, 'size': len(data)})
                 basename = norm.lower().replace('\\', '/')
-                parser = {
+                parsers = {
                     'war3map.w3e': ('terrain.json', wc3.terrain),
                     'war3map.wpm': ('pathing.json', wc3.pathing),
                     'war3map.wts': ('strings.json', wc3.strings),
                     'war3map.imp': ('imports.json', wc3.imported),
-                }.get(basename)
+                    'war3map.w3i': ('mapinfo.json', wc3_info.header),
+                    'war3map.doo': ('doodads.json', wc3_place.doodads),
+                    'war3mapunits.doo': ('units.json', wc3_place.units),
+                }
+                for ext in ('w3u', 'w3t', 'w3b', 'w3d', 'w3a', 'w3h', 'w3q'):
+                    parsers['war3map.' + ext] = ('objects_' + ext + '.json',
+                                                  lambda src, extension=ext: wc3_place.overrides(src, extension))
+                parser = parsers.get(basename)
                 if parser:
                     out_name, parse = parser
-                    decoded = parse(data)
-                    decoded_files[out_name] = decoded
-                    result['decoded'][basename] = out_name
+                    try:
+                        decoded = parse(data)
+                        decoded_files[out_name] = decoded
+                        decoded_raw[basename] = decoded
+                        result['decoded'][basename] = out_name
+                    except (ValueError, UnicodeError) as ex:
+                        if args.strict:
+                            raise
+                        result['warnings'].append({'source': basename,
+                                                   'reason': str(ex), 'preservedOriginal': True})
             if not result['files']:
                 raise ValueError('no files found in source')
+            if 'war3map.w3i' in decoded_raw and 'war3map.wts' in decoded_raw:
+                info = decoded_raw['war3map.w3i']
+                dictionary = decoded_raw['war3map.wts']['strings']
+                for field in ('name', 'author', 'description', 'recommendedPlayers'):
+                    info[field] = dictionary.get(info[field], info[field])
+            if 'war3map.w3e' in decoded_raw:
+                try:
+                    height_data = decoded_raw['war3map.w3e']
+                    place = wc3_studio.placements(height_data,
+                        decoded_raw.get('war3map.doo'), decoded_raw.get('war3mapunits.doo'))
+                    decoded_files['placements.json'] = place
+                    result['decoded']['placements'] = 'placements.json'
+                    decoded_files['studio-map.json'] = wc3_studio.mapdoc(
+                        height_data, decoded_raw.get('war3map.w3i'), place)
+                    result['decoded']['studio-map'] = 'studio-map.json'
+                except ValueError as ex:
+                    if args.strict:
+                        raise
+                    result['warnings'].append({'source': 'war3map.w3e',
+                                               'reason': 'Studio preview unavailable: ' + str(ex),
+                                               'preservedOriginal': True})
             for out_name, doc in decoded_files.items():
                 if (stage / out_name).exists():
                     raise ValueError('decoded output collides with original file: ' + out_name)
@@ -125,7 +168,7 @@ def run(argv=None):
             write_json(stage / 'import.json', result)
             os.replace(str(stage), str(target))
         print(json.dumps({'ok': True, 'target': str(target), 'files': result['fileCount'],
-                          'decoded': result['decoded']}, ensure_ascii=False))
+                          'decoded': result['decoded'], 'warnings': result['warnings']}, ensure_ascii=False))
         return 0
     except (ValueError, OSError) as ex:
         print(json.dumps({'ok': False, 'error': str(ex)}, ensure_ascii=False))
