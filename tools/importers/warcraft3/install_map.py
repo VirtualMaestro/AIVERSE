@@ -28,12 +28,13 @@ def run(argv=None):
             raise ValueError('imported map must be directly below content/Warcraft3')
         preview_file = imported / 'studio-map.json'
         game_file = root / 'game.json'
-        if not preview_file.is_file() or not game_file.is_file() or game_file.is_symlink():
+        if not preview_file.is_file() or preview_file.is_symlink() or not game_file.is_file() or game_file.is_symlink():
             raise ValueError('studio-map.json or project game.json is missing')
         game = json.loads(game_file.read_text(encoding='utf-8'))
         preview = json.loads(preview_file.read_text(encoding='utf-8'))
         if not isinstance(game, dict) or not isinstance(game.get('maps', []), list):
             raise ValueError('game.json must be an object with a maps list')
+        game.setdefault('maps', [])
         if not isinstance(preview, dict) or not preview.get('warcraft3', {}).get('previewOnly'):
             raise ValueError('not a Warcraft III MapDoc preview')
         dims = preview.get('size')
@@ -47,8 +48,10 @@ def run(argv=None):
             raise ValueError('invalid map name')
         rel = 'maps/warcraft3_' + slug + '.json'
         dest = root / rel
+        if dest.parent.is_symlink():
+            raise ValueError('project maps directory must not be a symlink')
         if dest.exists() or any(m.get('file', '').casefold() == rel.casefold() for m in game['maps']
-                                if isinstance(m, dict)):
+                                if isinstance(m, dict) and isinstance(m.get('file'), str)):
             raise ValueError('map destination already exists or is registered')
         dest.parent.mkdir(parents=True, exist_ok=True)
         title = str(preview.get('name', 'Warcraft III map'))
