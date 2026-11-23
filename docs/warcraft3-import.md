@@ -145,3 +145,101 @@ Next: implement the missing game-version layouts and actual model/SLK mapping;
 instantiate game objects via native ECS, bind water through NEREID and vegetation
 through TerraWeave, and visually verify the map with a legitimately supplied
 Warcraft III map in Studio.
+
+
+## Stage 3 — native model-backed scene entities (2026-11-23)
+
+**Single command** for an existing project with `game.json` and a native `rules.json`:
+
+```bash
+# macOS (only required when the map input is a binary MPQ archive):
+brew install stormlib
+
+python3 tools/importers/warcraft3/cli.py \
+  --source "/path/to/MyMap.w3x" \
+  --project "/path/to/AIVERSE-project" \
+  --game-data "/path/to/user-owned/extracted-Warcraft3"
+```
+
+`--game-data` is a folder of **already extracted** game data containing
+`Units/UnitUI.slk`, `Units/UnitSkin.txt`, `Doodads/Doodads.slk`,
+`Units/.../*.mdx`, textures, etc. It is optional; custom map-embedded
+models can work without it. A Reforged **CASC installation directory itself
+is not an extracted folder**. The importer cannot currently read CASC indexes.
+
+The command imports the original map files under
+`content/Warcraft3/MyMap/`, decodes the map, resolves model paths, and
+registers a native MapDoc file `maps/warcraft3_MyMap.json`. It creates a
+separate `warcraft3_MyMap.json` type file next to the project's rules file
+and appends a `rules.include` entry. Each mapped object is an ordinary
+`map.entities` instance with its own type, deterministic name, native XY
+position and source metadata. Existing game types and map entries are kept.
+
+### Rawcode resolution
+
+The resolver uses the user-supplied `UnitUI.slk` (classic), `UnitSkin.txt`
+(Reforged), relevant Doodad/Destructable tables, and object editor overrides
+(`umdl`, `dmdl`, `bfil`). Only model files actually found in the
+imported map or `--game-data` can become native view models. It copies
+model files and directly referenced texture assets from the supplied data
+under `content/Warcraft3/MyMap/_game/`.
+
+For a missing or custom rawcode mapping, pass a JSON mapping relative source
+paths to `--model-map`, for example:
+
+```json
+{
+  "hfoo": "Units/Human/Footman/Footman.mdx",
+  "ATtr": "Doodads/Terrain/Trees/SomeTree.mdx"
+}
+```
+
+Paths must be inside the imported map or the provided game-data tree.
+Missing files are reported; no generic placeholder art is substituted.
+
+`--strict` stops before installing native content if any placement is
+unresolved. Without it, resolvable objects are included, while everything
+unresolved is retained in `placements.json` and recorded in
+`resolve-report.json`. `--assets-only` imports only original and decoded
+files. To examine the plan without changing the project after extraction,
+run `install_scene.py --project ... --imported ... --game-data ... --dry-run`.
+
+### Supported and unsupported formats
+
+- Warcraft III W3E v11/v12 terrain (heightfield conversion), WPM v0,
+  WTS multiline strings (including inline braces), IMP import lists
+- W3I map information **header** v18/23–33/39, not the full player/force data
+- W3do v8/11 doodads and units; W3do v13/11 **doodads only**, including
+  raw new color and four extension dwords without guessing their meanings
+- Object Editor v1/v2 overrides; object v3 stays unmodified in the original
+  archive and generates a warning
+- War3mapUnits.doo v13 is deliberately not interpreted: the populated
+  placement subrecords have incompatible shapes; do not map them as v8
+
+### Limits of the result
+
+This is **visual object placement into the standard AIVERSE map schema**, not
+a full Warcraft III game or a verified Studio GPU scene. Units have no
+fabricated WC3 health/weapons/AI and are inserted with neutral AIVERSE owner 0;
+the original owner, height, scale, variation, rotation and creation ID are
+retained in the `warcraft3` metadata. The current native MapDoc file stores
+2D positions; applying original Y (vertical) and per-instance scaling to live
+renderer instances still requires native Studio acceptance.
+
+Warcraft splat tiles, sharp cliffs, water levels and WPM pathing have source
+JSON but are **not** published into live TerraWeave/NEREID/nav data yet.
+Runtime particles/ribbons and exact HD material parity remain unsupported.
+
+Unpacker archive discovery cannot enumerate protected MPQ entries absent from
+`(listfile)` or known paths. Real MPQ/StormLib ABI and gameplay/render tests
+are still pending. Never redistribute or commit extracted copyrighted game
+resources unless the rights allow it.
+
+Run the offline synthetic regression on the AIVERSE checkout:
+
+```bash
+python3 -m unittest discover -s tests/tools -p 'test_warcraft3*.py' -v
+```
+
+With CMake tests configured, the same suite is registered as
+`warcraft3_importer_python` under the `TOOLS;IMPORT` labels.
