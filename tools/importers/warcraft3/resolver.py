@@ -315,7 +315,7 @@ def resolve(import_dir, game_data=None, model_map=None):
                 for texture in _references_for_game_model(model_file, game_index):
                     texrel = texture.relative_to(root).as_posix()
                     copies['content/Warcraft3/%s/_game/%s' % (import_dir.name, texrel)] = str(texture)
-            type_name = 'wc3_%s_%s' % (kind, raw.encode('utf-8').hex())
+            type_name = 'wc3_%s_%s_%s' % (import_dir.name, kind, raw.encode('utf-8').hex())
             if type_name not in types:
                 types[type_name] = {'name': tables.get(base, {}).get('name') or '%s %s' % (kind, raw),
                                     'tags': ['warcraft3', 'imported'],
