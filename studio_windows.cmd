@@ -1,6 +1,6 @@
 @echo off
 rem AIVERSE Studio on Windows: builds the web UI and the native Studio (WebView2 + Vulkan), then opens it.
-rem Usage: studio_windows.cmd [project folder]   (default: the last opened project / the skirmish template package)
+rem Usage: studio_windows.cmd [project folder]   (default: the skirmish template package)
 rem Needs: Visual Studio 2022 (Desktop C++), CMake, Node.js; at run time the WebView2 Runtime and a Vulkan driver.
 setlocal
 cd /d "%~dp0"
